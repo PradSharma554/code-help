@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Algo Insight 🧠
 
-## Getting Started
+Algo Insight is a specialized toolkit designed for comparative programmers and LeetCode enthusiasts. It helps users track their learning journey, identify mistake patterns, and understand code complexity through AI-driven analysis.
 
-First, run the development server:
+## 🚀 Problem Solved
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Competitive programming often involves repetitive failure. Students grind hundreds of problems but often repeat the same specific types of mistakes (e.g., "Edge cases in DP", "TLE in Graph BFS").
+Algo Insight solves this by:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1.  **Journaling Mistakes**: Moving beyond "Solved/Unsolved" to tracking _why_ you failed.
+2.  **Pattern Recognition**: Visualizing weak topics and recurring error types.
+3.  **Complexity Analysis**: Demystifying Big-O notation for self-written code.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🏗 System Architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Frontend**: Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons, Recharts.
+- **Backend**: Next.js API Routes (Serverless functions).
+- **Database**: MongoDB (via Mongoose) for storing User profiles and Mistake logs.
+- **Authentication**: NextAuth.js (JWT Strategy) with Credentials Provider.
+- **AI Engine**: OpenAI API (GPT-3.5-turbo) for code complexity analysis.
 
-## Learn More
+## 🤖 AI Usage
 
-To learn more about Next.js, take a look at the following resources:
+The application uses Generative AI in the **Complexity Analyzer** module.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Input**: User provides raw code snippets (C++, Java, Python, JS).
+- **Process**: The backend sends this code to OpenAI with a structured system prompt requesting Big-O estimation and specific optimization tips.
+- **Fallback**: If no API key is present, a deterministic mock analyzer runs basic regex-based static analysis to estimate complexity based on loop nesting.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ⚠️ Limitations
 
-## Deploy on Vercel
+- **Mock AI Mode**: Without a valid `OPENAI_API_KEY` in `.env.local`, the analysis is a simulation based on simple heuristic rules (counting nested loops).
+- **Static Analysis**: The regex-based fallback is naive and cannot detect complex recursion or hidden complexity in library calls.
+- **Language Support**: Primarily optimized for C++, Java, and JavaScript syntax.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📦 Getting Started
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1.  **Install Dependencies**:
+
+    ```bash
+    npm install
+    ```
+
+2.  **Environment Setup**:
+    Create a `.env.local` file:
+
+    ```env
+    MONGODB_URI=your_mongodb_connection_string
+    NEXTAUTH_SECRET=your_nextauth_secret
+    OPENAI_API_KEY=your_openai_api_key (optional)
+    ```
+
+3.  **Run Locally**:
+    ```bash
+    npm run dev
+    ```
