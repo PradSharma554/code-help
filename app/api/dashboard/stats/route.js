@@ -31,6 +31,19 @@ export async function GET(req) {
 
   const topicStats = await Mistake.aggregate([
     { $match: { user: new mongoose.Types.ObjectId(userId) } },
+    {
+      $project: {
+        // Split by comma. Note: This assumes comma is the separator.
+        // If users use other separators, this needs adjustment.
+        topics: { $split: ["$topic", ","] },
+      },
+    },
+    { $unwind: "$topics" },
+    {
+      $project: {
+        topic: { $trim: { input: "$topics" } },
+      },
+    },
     { $group: { _id: "$topic", count: { $sum: 1 } } },
     { $sort: { count: -1 } },
   ]);
