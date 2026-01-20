@@ -81,6 +81,7 @@ function Landing() {
 function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshingInsight, setRefreshingInsight] = useState(false);
 
   useEffect(() => {
     fetch("/api/dashboard/stats")
@@ -90,6 +91,25 @@ function Dashboard() {
         setLoading(false);
       });
   }, []);
+
+  const refreshInsight = async () => {
+    setRefreshingInsight(true);
+    try {
+      const res = await fetch("/api/journal/insight", { method: "POST" });
+      const data = await res.json();
+      if (data.insight) {
+        setStats((prev) => ({
+          ...prev,
+          insight: data.insight,
+          mistakeCountAtLastInsight: prev.totalMistakes, // Assume synced after refresh
+        }));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRefreshingInsight(false);
+    }
+  };
 
   if (loading)
     return (
@@ -104,12 +124,67 @@ function Dashboard() {
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-slate-800">Your Overview</h2>
-        <Link
-          href="/journal"
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-500/30"
-        >
-          <LineChart className="w-4 h-4" /> Log Mistake
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/journal"
+            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-500/30"
+          >
+            <LineChart className="w-4 h-4" /> Log Mistake
+          </Link>
+        </div>
+      </div>
+
+      {/* AI Insight Card */}
+      <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-100 p-6 rounded-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-full blur-3xl -mr-16 -mt-16 opacity-50 pointer-events-none"></div>
+        <div className="flex justify-between items-start mb-4 relative z-10">
+          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <Brain className="w-5 h-5 text-violet-600" />
+            AI Performance Insight
+          </h3>
+          <button
+            onClick={refreshInsight}
+            disabled={refreshingInsight}
+            className="text-xs font-medium px-3 py-1.5 bg-white border border-violet-100 text-violet-600 rounded-md hover:bg-violet-50 transition flex items-center gap-1.5 disabled:opacity-70 shadow-sm"
+          >
+            {refreshingInsight ? (
+              <div className="w-3 h-3 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <Zap className="w-3 h-3" />
+            )}
+            Refresh Analysis
+          </button>
+        </div>
+
+        {stats && stats.insight ? (
+          <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed whitespace-pre-line bg-white/60 p-4 rounded-lg border border-violet-100/50">
+            {stats.insight.split("**").map((part, index) =>
+              index % 2 === 1 ? (
+                <strong key={index} className="text-violet-700 font-bold">
+                  {part}
+                </strong>
+              ) : (
+                part
+              ),
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-slate-500 bg-white/40 rounded-lg border border-dashed border-violet-200">
+            <p className="mb-2">No analysis generated yet.</p>
+            <button
+              onClick={refreshInsight}
+              className="text-sm font-medium text-violet-600 hover:text-violet-700 underline"
+            >
+              Generate First Report
+            </button>
+          </div>
+        )}
+        {stats && stats.totalMistakes - stats.mistakeCountAtLastInsight > 0 && (
+          <p className="text-xs text-slate-500 mt-3 text-right">
+            {stats.totalMistakes - stats.mistakeCountAtLastInsight} new logs
+            since last report.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

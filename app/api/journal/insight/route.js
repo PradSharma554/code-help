@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import connectDB from "@/lib/db";
 import Mistake from "@/models/Mistake";
+import User from "@/models/User";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "mock-key");
@@ -22,6 +23,10 @@ export async function POST(req) {
       .sort({ createdAt: -1 })
       .limit(50);
 
+    const totalMistakes = await Mistake.countDocuments({
+      user: session.user.id,
+    });
+
     if (mistakes.length === 0) {
       return new NextResponse(
         JSON.stringify({
@@ -32,42 +37,49 @@ export async function POST(req) {
       );
     }
 
+    let insight = "";
+
     if (!process.env.GEMINI_API_KEY) {
-      return new NextResponse(
-        JSON.stringify({
-          insight:
-            "**Mock Insight**:\n\n1. **Weakness**: Dynamic Programming.\n2. **Reason**: Implementing bottom-up approaches.\n\n(Add GEMINI_API_KEY for real analysis)",
-        }),
-        { status: 200 },
-      );
+      insight =
+        "**Mock Insight**:\n\n1. **Weakness**: Dynamic Programming.\n2. **Reason**: Implementing bottom-up approaches.\n\n(Add GEMINI_API_KEY for real analysis)";
+    } else {
+      const journalContent = mistakes
+        .map(
+          (m) =>
+            `- Problem: ${m.problemName} (${m.topic})
+        - Type: ${m.mistakeType}
+        - Reflection: ${m.reflection}`,
+        )
+        .join("\n");
+
+      const prompt = `
+        You are a coding mentor. Here are my recent mistake journal entries from my coding practice:
+
+        ${journalContent}
+
+        Based on these entries, provide a concise but impactful analysis in Markdown format.
+        1. **Top Weaknesses**: Identify my top 3 weak topics or patterns of error.
+        2. **Root Cause Analysis**: Summarize why I am making these mistakes (e.g., rushing, lack of concept clarity, edge cases).
+        3. **Actionable Advice**: Give me 1 specific actionable piece of advice to improve.
+        
+        Keep the tone encouraging but objective. Use emojis where appropriate to make it friendly.
+        `;
+
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      insight = response.text();
     }
 
-    const journalContent = mistakes
-      .map(
-        (m) =>
-          `- Problem: ${m.problemName} (${m.topic})
-       - Type: ${m.mistakeType}
-       - Reflection: ${m.reflection}`,
-      )
-      .join("\n");
-
-    const prompt = `
-      You are a coding mentor. Here are my recent mistake journal entries from my coding practice:
-
-      ${journalContent}
-
-      Based on these entries, provide a concise but impactful analysis in Markdown format.
-      1. **Top Weaknesses**: Identify my top 3 weak topics or patterns of error.
-      2. **Root Cause Analysis**: Summarize why I am making these mistakes (e.g., rushing, lack of concept clarity, edge cases).
-      3. **Actionable Advice**: Give me 1 specific actionable piece of advice to improve.
-      
-      Keep the tone encouraging but objective. Use emojis where appropriate to make it friendly.
-    `;
-
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const insight = response.text();
+    // Save to User model
+    await User.findByIdAndUpdate(
+      session.user.id,
+      {
+        latestInsight: insight,
+        mistakeCountAtLastInsight: totalMistakes,
+      },
+      { strict: false },
+    );
 
     return new NextResponse(JSON.stringify({ insight }), { status: 200 });
   } catch (error) {

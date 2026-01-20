@@ -5,6 +5,8 @@ import connectDB from "@/lib/db";
 import Mistake from "@/models/Mistake";
 import mongoose from "mongoose";
 
+import User from "@/models/User";
+
 export async function GET(req) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -15,6 +17,10 @@ export async function GET(req) {
 
   await connectDB();
   const userId = session.user.id;
+
+  // Fetch User for insight
+  const user = await User.findById(userId).lean();
+  const totalMistakes = await Mistake.countDocuments({ user: userId });
 
   // Aggregate stats
   const mistakeTypeStats = await Mistake.aggregate([
@@ -38,6 +44,9 @@ export async function GET(req) {
       mistakeTypeStats,
       topicStats,
       recentMistakes,
+      insight: user?.latestInsight,
+      mistakeCountAtLastInsight: user?.mistakeCountAtLastInsight || 0,
+      totalMistakes,
     }),
     { status: 200 },
   );

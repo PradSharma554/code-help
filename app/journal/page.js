@@ -2,15 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Plus,
-  X,
-  Search,
-  Filter,
-  Sparkles,
-  Loader2,
-  Brain,
-} from "lucide-react";
+import { Plus, X, Search, Filter, Sparkles, Loader2 } from "lucide-react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 
@@ -22,8 +14,6 @@ export default function JournalPage() {
   const [codeSnippet, setCodeSnippet] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
-  const [insight, setInsight] = useState(null);
-  const [generatingInsight, setGeneratingInsight] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,21 +29,6 @@ export default function JournalPage() {
     if (res.ok) {
       const data = await res.json();
       setMistakes(data);
-    }
-  };
-
-  const generateInsight = async () => {
-    setGeneratingInsight(true);
-    try {
-      const res = await fetch("/api/journal/insight", { method: "POST" });
-      const data = await res.json();
-      if (data.insight) {
-        setInsight(data.insight);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setGeneratingInsight(false);
     }
   };
 
@@ -130,18 +105,6 @@ export default function JournalPage() {
         </div>
         <div className="flex gap-3">
           <button
-            onClick={generateInsight}
-            disabled={generatingInsight}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition font-medium disabled:opacity-70"
-          >
-            {generatingInsight ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Brain className="w-4 h-4" />
-            )}
-            {generatingInsight ? "Thinking..." : "Get AI Report"}
-          </button>
-          <button
             onClick={() => setShowForm(!showForm)}
             className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition font-medium"
           >
@@ -154,44 +117,6 @@ export default function JournalPage() {
           </button>
         </div>
       </div>
-
-      {insight && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto flex flex-col p-6 animate-in zoom-in-95">
-            <div className="flex justify-between items-center mb-6 border-b pb-4">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <Brain className="w-6 h-6 text-purple-600" />
-                AI Performance Report
-              </h2>
-              <button
-                onClick={() => setInsight(null)}
-                className="p-2 hover:bg-slate-100 rounded-full transition"
-              >
-                <X className="w-5 h-5 text-slate-500" />
-              </button>
-            </div>
-            <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed whitespace-pre-line">
-              {insight.split("**").map((part, index) =>
-                index % 2 === 1 ? (
-                  <strong key={index} className="text-indigo-700 font-bold">
-                    {part}
-                  </strong>
-                ) : (
-                  part
-                ),
-              )}
-            </div>
-            <div className="mt-6 pt-4 border-t flex justify-end">
-              <button
-                onClick={() => setInsight(null)}
-                className="px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition"
-              >
-                Close Report
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showForm && (
         <div className="bg-white p-6 rounded-xl shadow-lg border border-indigo-100 mb-8 animate-in slide-in-from-top-4">
