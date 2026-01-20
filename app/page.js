@@ -277,72 +277,64 @@ function Dashboard() {
             </button>
           </div>
         )}
-
-        {/* Suggested Problems (Only when Expanded) */}
-        {stats &&
-          stats.suggestedProblems &&
-          stats.suggestedProblems.length > 0 &&
-          isInsightExpanded && (
-            <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
-              <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                <Target className="w-4 h-4 text-indigo-500" />
-                Recommended Practice
-              </h4>
-              <div className="bg-white rounded-xl border border-indigo-100 shadow-sm overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-indigo-50/50">
-                    <tr className="text-slate-500 text-xs uppercase tracking-wide">
-                      <th className="px-4 py-3 font-medium">Problem</th>
-                      <th className="px-4 py-3 font-medium">Topic</th>
-                      <th className="px-4 py-3 font-medium">Difficulty</th>
-                      <th className="px-4 py-3 font-medium text-right">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-indigo-50">
-                    {stats.suggestedProblems.map((prob, idx) => (
-                      <tr
-                        key={idx}
-                        className="hover:bg-indigo-50/30 transition"
-                      >
-                        <td className="px-4 py-3 font-medium text-slate-800">
-                          {prob.problemName}
-                        </td>
-                        <td className="px-4 py-3 text-slate-500">
-                          {prob.topic}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                              prob.difficulty === "Hard"
-                                ? "bg-red-50 text-red-600"
-                                : prob.difficulty === "Medium"
-                                  ? "bg-yellow-50 text-yellow-600"
-                                  : "bg-green-50 text-green-600"
-                            }`}
-                          >
-                            {prob.difficulty}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <a
-                            href={prob.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 text-xs font-semibold"
-                          >
-                            Solve <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
       </div>
+
+      {/* Suggested Problems (Separate Card) */}
+      {stats &&
+        stats.suggestedProblems &&
+        stats.suggestedProblems.length > 0 && (
+          <div className="bg-white p-6 rounded-xl shadow-sm border hover:shadow-md transition">
+            <h3 className="text-lg font-semibold mb-4 text-slate-700 border-b pb-2 flex items-center gap-2">
+              <Target className="w-5 h-5 text-indigo-500" />
+              Recommended Practice
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-indigo-50/50">
+                  <tr className="text-slate-500 text-xs uppercase tracking-wide">
+                    <th className="px-4 py-3 font-medium">Problem</th>
+                    <th className="px-4 py-3 font-medium">Topic</th>
+                    <th className="px-4 py-3 font-medium">Difficulty</th>
+                    <th className="px-4 py-3 font-medium text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-indigo-50">
+                  {stats.suggestedProblems.map((prob, idx) => (
+                    <tr key={idx} className="hover:bg-indigo-50/30 transition">
+                      <td className="px-4 py-3 font-medium text-slate-800">
+                        {prob.problemName}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">{prob.topic}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                            prob.difficulty === "Hard"
+                              ? "bg-red-50 text-red-600"
+                              : prob.difficulty === "Medium"
+                                ? "bg-yellow-50 text-yellow-600"
+                                : "bg-green-50 text-green-600"
+                          }`}
+                        >
+                          {prob.difficulty}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <a
+                          href={prob.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 text-xs font-semibold"
+                        >
+                          Solve <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* LeetCode Stats (Pie Chart) */}
