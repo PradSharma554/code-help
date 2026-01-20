@@ -15,6 +15,13 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    latestInsight: {
+      type: String,
+    },
+    mistakeCountAtLastInsight: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true },
 );

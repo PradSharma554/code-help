@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "mock-key",
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "mock-key");
 
 export async function POST(req) {
   try {
@@ -19,7 +17,7 @@ export async function POST(req) {
 
     let analysisResult;
 
-    if (process.env.OPENAI_API_KEY) {
+    if (process.env.GEMINI_API_KEY) {
       const prompt = `
         Analyze the time and space complexity of the following ${language} code.
         Focus on Big-O notation.
@@ -32,21 +30,27 @@ export async function POST(req) {
         "spaceComplexity": "e.g. O(n)",
         "explanation": "concise technical explanation",
         "improvements": "one or two sentences on optimization or 'Optimal'"
+        
+        Do not include markdown formatting (like \`\`\`json). Just return the raw JSON.
       `;
 
       try {
-        const completion = await openai.chat.completions.create({
-          messages: [{ role: "user", content: prompt }],
-          model: "gpt-3.5-turbo",
-        });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        // Clean up markdown code blocks if present (Gemini sometimes adds them despite instructions)
+        const jsonString = text.replace(/```json\n?|\n?```/g, "").trim();
 
         try {
-          analysisResult = JSON.parse(completion.choices[0].message.content);
+          analysisResult = JSON.parse(jsonString);
         } catch (e) {
+          console.error("JSON Parse Error", e, jsonString);
           analysisResult = {
             timeComplexity: "Unknown",
             spaceComplexity: "Unknown",
-            explanation: completion.choices[0].message.content,
+            explanation: text,
             improvements: "N/A",
           };
         }
@@ -86,7 +90,7 @@ function getMockAnalysis(stats) {
     timeComplexity: time,
     spaceComplexity: "O(1)",
     explanation:
-      explanation + " (Mock mode: Add OPENAI_API_KEY for real AI analysis)",
+      explanation + " (Mock mode: Add GEMINI_API_KEY for real AI analysis)",
     improvements: "Check if the nested loop is necessary.",
   };
 }

@@ -35,7 +35,7 @@ export default function AnalyzerPage() {
       {/* Input Section */}
       <div className="flex-1 flex flex-col">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-2xl font-bold text-black">
             Code Complexity Analyzer
           </h1>
           <select

@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, X, Search, Filter } from "lucide-react";
+import {
+  Plus,
+  X,
+  Search,
+  Filter,
+  Sparkles,
+  Loader2,
+  Brain,
+} from "lucide-react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +19,11 @@ export default function JournalPage() {
   const [mistakes, setMistakes] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("");
+  const [codeSnippet, setCodeSnippet] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const [insight, setInsight] = useState(null);
+  const [generatingInsight, setGeneratingInsight] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,6 +42,42 @@ export default function JournalPage() {
     }
   };
 
+  const generateInsight = async () => {
+    setGeneratingInsight(true);
+    try {
+      const res = await fetch("/api/journal/insight", { method: "POST" });
+      const data = await res.json();
+      if (data.insight) {
+        setInsight(data.insight);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setGeneratingInsight(false);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!codeSnippet.trim()) return;
+    setIsAnalyzing(true);
+    setAnalysis(null);
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Defaulting to javascript for now, ideally could add a selector
+        body: JSON.stringify({ code: codeSnippet, language: "javascript" }),
+      });
+      const data = await res.json();
+      setAnalysis(data);
+    } catch (error) {
+      console.error("Analysis failed", error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -37,16 +86,30 @@ export default function JournalPage() {
     // Simple validation
     if (!data.problemName || !data.topic) return;
 
+    const payload = {
+      ...data,
+      codeSnippet,
+      complexityAnalysis: analysis
+        ? {
+            time: analysis.timeComplexity,
+            space: analysis.spaceComplexity,
+            note: analysis.improvements,
+          }
+        : undefined,
+    };
+
     const res = await fetch("/api/mistakes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {
       setShowForm(false);
       fetchMistakes();
       e.target.reset();
+      setCodeSnippet("");
+      setAnalysis(null);
     }
   };
 
@@ -57,7 +120,7 @@ export default function JournalPage() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto relative">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Mistake Journal</h1>
@@ -65,14 +128,70 @@ export default function JournalPage() {
             Reflect on your errors to stop making them.
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
-        >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {showForm ? "Cancel" : "Log Mistake"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={generateInsight}
+            disabled={generatingInsight}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition font-medium disabled:opacity-70"
+          >
+            {generatingInsight ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Brain className="w-4 h-4" />
+            )}
+            {generatingInsight ? "Thinking..." : "Get AI Report"}
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition font-medium"
+          >
+            {showForm ? (
+              <X className="w-4 h-4" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
+            {showForm ? "Cancel" : "Log Mistake"}
+          </button>
+        </div>
       </div>
+
+      {insight && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto flex flex-col p-6 animate-in zoom-in-95">
+            <div className="flex justify-between items-center mb-6 border-b pb-4">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Brain className="w-6 h-6 text-purple-600" />
+                AI Performance Report
+              </h2>
+              <button
+                onClick={() => setInsight(null)}
+                className="p-2 hover:bg-slate-100 rounded-full transition"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+            <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed whitespace-pre-line">
+              {insight.split("**").map((part, index) =>
+                index % 2 === 1 ? (
+                  <strong key={index} className="text-indigo-700 font-bold">
+                    {part}
+                  </strong>
+                ) : (
+                  part
+                ),
+              )}
+            </div>
+            <div className="mt-6 pt-4 border-t flex justify-end">
+              <button
+                onClick={() => setInsight(null)}
+                className="px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition"
+              >
+                Close Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white p-6 rounded-xl shadow-lg border border-indigo-100 mb-8 animate-in slide-in-from-top-4">
@@ -132,6 +251,56 @@ export default function JournalPage() {
                 </select>
               </div>
             </div>
+
+            {/* Code Snippet & AI Analysis */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-medium text-slate-700">
+                  Code Snippet
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing || !codeSnippet.trim()}
+                  className="text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium disabled:opacity-50"
+                >
+                  {isAnalyzing ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3" />
+                  )}
+                  {isAnalyzing ? "Analyzing..." : "Analyze with AI"}
+                </button>
+              </div>
+              <textarea
+                value={codeSnippet}
+                onChange={(e) => setCodeSnippet(e.target.value)}
+                rows="4"
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm bg-slate-50"
+                placeholder="Paste your code here..."
+              ></textarea>
+
+              {/* Analysis Result Preview */}
+              {analysis && (
+                <div className="mt-2 p-3 bg-indigo-50 rounded-lg border border-indigo-100 text-sm">
+                  <div className="flex gap-4 mb-2">
+                    <div>
+                      <span className="font-bold text-indigo-700">Time:</span>{" "}
+                      {analysis.timeComplexity}
+                    </div>
+                    <div>
+                      <span className="font-bold text-indigo-700">Space:</span>{" "}
+                      {analysis.spaceComplexity}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="font-bold text-indigo-700">Feedback:</span>{" "}
+                    {analysis.improvements}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Reflection (What went wrong?)
@@ -164,11 +333,11 @@ export default function JournalPage() {
       )}
 
       <div className="mb-6 relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
         <input
           type="text"
           placeholder="Search by problem or topic..."
-          className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full pl-10 pr-4 py-2  border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
@@ -209,6 +378,14 @@ export default function JournalPage() {
                 {mistake.mistakeType}
               </span>
             </div>
+
+            {mistake.complexityAnalysis && mistake.complexityAnalysis.time && (
+              <div className="mb-3 flex gap-4 text-xs font-mono text-slate-500 bg-slate-50 p-2 rounded border border-slate-100">
+                <span>TC: {mistake.complexityAnalysis.time}</span>
+                <span>SC: {mistake.complexityAnalysis.space}</span>
+              </div>
+            )}
+
             <p className="text-slate-600 text-sm bg-slate-50 p-3 rounded-lg border-l-4 border-indigo-400 italic">
               "{mistake.reflection}"
             </p>
