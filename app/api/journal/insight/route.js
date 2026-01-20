@@ -38,10 +38,25 @@ export async function POST(req) {
     }
 
     let insight = "";
+    let suggestedProblems = [];
 
     if (!process.env.GEMINI_API_KEY) {
       insight =
         "**Mock Insight**:\n\n1. **Weakness**: Dynamic Programming.\n2. **Reason**: Implementing bottom-up approaches.\n\n(Add GEMINI_API_KEY for real analysis)";
+      suggestedProblems = [
+        {
+          problemName: "Climbing Stairs",
+          difficulty: "Easy",
+          topic: "DP",
+          link: "https://leetcode.com/problems/climbing-stairs/",
+        },
+        {
+          problemName: "Coin Change",
+          difficulty: "Medium",
+          topic: "DP",
+          link: "https://leetcode.com/problems/coin-change/",
+        },
+      ];
     } else {
       const journalContent = mistakes
         .map(
@@ -57,18 +72,37 @@ export async function POST(req) {
 
         ${journalContent}
 
-        Based on these entries, provide a concise but impactful analysis in Markdown format.
-        1. **Top Weaknesses**: Identify my top 3 weak topics or patterns of error.
-        2. **Root Cause Analysis**: Summarize why I am making these mistakes (e.g., rushing, lack of concept clarity, edge cases).
-        3. **Actionable Advice**: Give me 1 specific actionable piece of advice to improve.
+        Based on these entries, primarily your task is to analyze my weaknesses and suggest concrete LeetCode problems to practice.
         
-        Keep the tone encouraging but objective. Use emojis where appropriate to make it friendly.
+        Return your response in strictly VALID JSON format (no markdown formatting like \`\`\`json). The structure should be:
+        {
+            "insight": "markdown string containing: 1. Top Weaknesses, 2. Root Cause Analysis, 3. Actionable Advice. Use bolding and emojis.",
+            "suggestedProblems": [
+                { "problemName": "Name of problem", "difficulty": "Easy/Medium/Hard", "topic": "Main Topic", "link": "https://leetcode.com/problems/problem-slug/" }
+            ]
+        }
+        
+        For suggestedProblems, provide 3-5 specific LeetCode problems that directly address my weaknesses identified in the journal.
         `;
 
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const result = await model.generateContent(prompt);
       const response = await result.response;
-      insight = response.text();
+      const text = response.text();
+
+      try {
+        // Clean markdown code fence if present
+        const cleanText = text
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+        const data = JSON.parse(cleanText);
+        insight = data.insight;
+        suggestedProblems = data.suggestedProblems;
+      } catch (e) {
+        console.error("JSON Parsing failed", e);
+        insight = text; // Fallback
+      }
     }
 
     // Save to User model
@@ -76,6 +110,7 @@ export async function POST(req) {
       session.user.id,
       {
         latestInsight: insight,
+        suggestedProblems: suggestedProblems,
         mistakeCountAtLastInsight: totalMistakes,
       },
       { strict: false },

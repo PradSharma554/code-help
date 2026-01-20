@@ -45,6 +45,8 @@ export async function GET(req) {
       topicStats,
       recentMistakes,
       insight: user?.latestInsight,
+      suggestedProblems: user?.suggestedProblems || [],
+      leetcodeStats: user?.leetcodeStats || null,
       mistakeCountAtLastInsight: user?.mistakeCountAtLastInsight || 0,
       totalMistakes,
     }),

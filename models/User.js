@@ -22,6 +22,20 @@ const UserSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    leetcodeStats: {
+      totalSolved: Number,
+      easySolved: Number,
+      mediumSolved: Number,
+      hardSolved: Number,
+    },
+    suggestedProblems: [
+      {
+        problemName: String,
+        difficulty: String,
+        topic: String,
+        link: String,
+      },
+    ],
   },
   { timestamps: true },
 );

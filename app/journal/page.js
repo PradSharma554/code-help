@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, X, Search, Filter, Sparkles, Loader2 } from "lucide-react";
+import {
+  Plus,
+  X,
+  Search,
+  Filter,
+  Sparkles,
+  Loader2,
+  DownloadCloud,
+} from "lucide-react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 
@@ -14,6 +22,11 @@ export default function JournalPage() {
   const [codeSnippet, setCodeSnippet] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [leetcodeUsername, setLeetcodeUsername] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -29,6 +42,31 @@ export default function JournalPage() {
     if (res.ok) {
       const data = await res.json();
       setMistakes(data);
+    }
+  };
+
+  const handleSync = async () => {
+    if (!leetcodeUsername.trim()) return;
+    setIsSyncing(true);
+    try {
+      const res = await fetch("/api/leetcode/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: leetcodeUsername }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message); // Simple feedback for now
+        setShowSyncModal(false);
+        fetchMistakes();
+      } else {
+        alert(data.error);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Sync failed. Check console.");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -105,6 +143,12 @@ export default function JournalPage() {
         </div>
         <div className="flex gap-3">
           <button
+            onClick={() => setShowSyncModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium"
+          >
+            <DownloadCloud className="w-4 h-4" /> Sync LeetCode
+          </button>
+          <button
             onClick={() => setShowForm(!showForm)}
             className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition font-medium"
           >
@@ -117,6 +161,60 @@ export default function JournalPage() {
           </button>
         </div>
       </div>
+
+      {showSyncModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-in zoom-in-95">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-slate-800">
+                Sync from LeetCode
+              </h3>
+              <button
+                onClick={() => setShowSyncModal(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-600 mb-4">
+              Enter your LeetCode username to fetch recent failed submissions
+              (TLE, Wrong Answer, etc.). This will auto-log them so you can add
+              reflections.
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Username
+              </label>
+              <input
+                value={leetcodeUsername}
+                onChange={(e) => setLeetcodeUsername(e.target.value)}
+                placeholder="e.g. tmwilliamlin168"
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-500 outline-none"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowSyncModal(false)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSync}
+                disabled={isSyncing || !leetcodeUsername.trim()}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-70"
+              >
+                {isSyncing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <DownloadCloud className="w-4 h-4" />
+                )}
+                {isSyncing ? "Syncing..." : "Sync Now"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white p-6 rounded-xl shadow-lg border border-indigo-100 mb-8 animate-in slide-in-from-top-4">
