@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -12,7 +12,6 @@ import {
   Unlock,
   Loader2,
   X,
-  ChevronRight,
 } from "lucide-react";
 
 export default function AnalyzerPage() {
@@ -21,18 +20,75 @@ export default function AnalyzerPage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const [hints, setHints] = useState([]);
+  const [hint, setHint] = useState(null);
   const [solution, setSolution] = useState(null);
   const [assistLoading, setAssistLoading] = useState(null); // 'hint' or 'solution'
 
   const [showSolutionModal, setShowSolutionModal] = useState(false);
   const [solutionLanguage, setSolutionLanguage] = useState("javascript");
+  const [lastAnalyzedCode, setLastAnalyzedCode] = useState("");
+
+  // Persistence: Load on Mount
+  useEffect(() => {
+    const savedCode = localStorage.getItem("analyzer_code");
+    const savedLang = localStorage.getItem("analyzer_lang");
+    const savedResult = localStorage.getItem("analyzer_result");
+    const savedHint = localStorage.getItem("analyzer_hint");
+    const savedSolution = localStorage.getItem("analyzer_solution");
+    const savedSolLang = localStorage.getItem("analyzer_sol_lang");
+
+    if (savedCode) {
+      setCode(savedCode);
+      setLastAnalyzedCode(savedCode); // Initialize lastAnalyzedCode
+    }
+    if (savedLang) setLanguage(savedLang);
+    if (savedResult) setResult(JSON.parse(savedResult));
+    if (savedHint) setHint(savedHint);
+    if (savedSolution) setSolution(savedSolution);
+    if (savedSolLang) setSolutionLanguage(savedSolLang);
+  }, []);
+
+  // Persistence: Save on Change
+  useEffect(() => {
+    localStorage.setItem("analyzer_code", code);
+    localStorage.setItem("analyzer_lang", language);
+
+    if (result) localStorage.setItem("analyzer_result", JSON.stringify(result));
+    else localStorage.removeItem("analyzer_result");
+
+    if (hint) localStorage.setItem("analyzer_hint", hint);
+    else localStorage.removeItem("analyzer_hint");
+
+    if (solution) localStorage.setItem("analyzer_solution", solution);
+    else localStorage.removeItem("analyzer_solution");
+
+    if (solutionLanguage)
+      localStorage.setItem("analyzer_sol_lang", solutionLanguage);
+  }, [code, language, result, hint, solution, solutionLanguage]);
+
+  // Handle Code Change: Just update code, don't reset yet
+  const handleCodeChange = (e) => {
+    setCode(e.target.value);
+  };
+
+  // Helper to reset outputs if code has changed since last analysis/assist
+  const checkAndResetStaleData = () => {
+    if (code !== lastAnalyzedCode) {
+      setResult(null);
+      setHint(null);
+      setSolution(null);
+      setShowSolutionModal(false);
+      // lastAnalyzedCode will be updated after successful API call
+    }
+  };
 
   const handleAnalyze = async () => {
     if (!code.trim()) return;
 
+    checkAndResetStaleData(); // Reset if code is stale
+
     setLoading(true);
-    setResult(null);
+    setResult(null); // Clear result immediately for new analysis
 
     try {
       const res = await fetch("/api/analyze", {
@@ -42,6 +98,7 @@ export default function AnalyzerPage() {
       });
       const data = await res.json();
       setResult(data);
+      setLastAnalyzedCode(code); // Mark this code as analyzed
     } catch (e) {
       console.error(e);
     } finally {
@@ -51,6 +108,9 @@ export default function AnalyzerPage() {
 
   const handleGetHint = async () => {
     if (!code.trim()) return;
+
+    checkAndResetStaleData(); // Reset if code is stale
+
     setAssistLoading("hint");
     try {
       const res = await fetch("/api/analyzer/assist", {
@@ -60,12 +120,13 @@ export default function AnalyzerPage() {
           code,
           language,
           type: "hint",
-          previousHints: hints,
+          previousHints: [], // No history needed for single hint mode
         }),
       });
       const data = await res.json();
       if (data.result) {
-        setHints((prev) => [...prev, data.result]);
+        setHint(data.result);
+        setLastAnalyzedCode(code); // Mark this code as having received a hint
       }
     } catch (e) {
       console.error(e);
@@ -76,6 +137,19 @@ export default function AnalyzerPage() {
 
   const handleGetSolution = async (lang = language) => {
     if (!code.trim()) return;
+
+    // If code has changed, reset all outputs and proceed to fetch
+    if (code !== lastAnalyzedCode) {
+      checkAndResetStaleData(); // This will reset solution too
+      // Fall through to fetch new solution
+    } else {
+      // Code is the same. If we already have a solution for this exact language, just open modal
+      if (solution && lang === solutionLanguage) {
+        setShowSolutionModal(true);
+        return;
+      }
+    }
+
     setAssistLoading("solution");
     setSolutionLanguage(lang); // Sync language
     try {
@@ -87,6 +161,8 @@ export default function AnalyzerPage() {
       const data = await res.json();
       if (data.result) {
         setSolution(data.result);
+        setShowSolutionModal(true); // Open immediately
+        setLastAnalyzedCode(code); // Mark this code as having received a solution
       }
     } catch (e) {
       console.error(e);
@@ -119,9 +195,9 @@ export default function AnalyzerPage() {
 
         <textarea
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={handleCodeChange}
           placeholder="Paste your solution here..."
-          className="flex-grow w-full p-4 font-mono text-sm bg-slate-900 text-slate-50 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[400px]"
+          className="grow w-full p-4 font-mono text-sm bg-slate-900 text-slate-50 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[400px]"
         ></textarea>
 
         <div className="flex gap-3 mt-4">
@@ -163,38 +239,20 @@ export default function AnalyzerPage() {
             ) : (
               <Unlock className="w-5 h-5" />
             )}
-            Solution
+            {/* If solution exists, just "Show Solution", else implied fetch */}
+            Show Solution
           </button>
         </div>
 
-        {/* Hints Display (Left Side) */}
-        {hints.length > 0 && (
-          <div className="mt-6 space-y-3 animate-in slide-in-from-top-4 fade-in">
-            <h3 className="text-sm font-semibold text-amber-500 uppercase tracking-wider flex items-center gap-2">
-              <Lightbulb className="w-4 h-4" /> Hints
+        {/* Hints Display (Left Side - Below Buttons) */}
+        {hint && (
+          <div className="mt-6 animate-in slide-in-from-top-4 fade-in">
+            <h3 className="text-sm font-semibold text-amber-500 uppercase tracking-wider flex items-center gap-2 mb-3">
+              <Lightbulb className="w-4 h-4" /> Latest Hint
             </h3>
-            {hints.map((hint, idx) => (
-              <div
-                key={idx}
-                className="p-3 bg-amber-50 text-amber-900 text-sm rounded-lg border border-amber-100 animate-in slide-in-from-top-2"
-              >
-                <span className="font-bold mr-1">#{idx + 1}:</span> {hint}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Solution Trigger (Left Side) */}
-        {solution && (
-          <div className="mt-4 animate-in slide-in-from-top-4 fade-in">
-            <button
-              onClick={() => setShowSolutionModal(true)}
-              className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-semibold group"
-            >
-              <Unlock className="w-4 h-4" />
-              Show Solution
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            <div className="p-3 bg-amber-50 text-amber-900 text-sm rounded-lg border border-amber-100 animate-in slide-in-from-top-2">
+              {hint}
+            </div>
           </div>
         )}
       </div>
