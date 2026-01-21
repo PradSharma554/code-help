@@ -11,6 +11,7 @@ import "prismjs/components/prism-cpp";
 import "prismjs/themes/prism-dark.css"; // Using dark theme
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -25,6 +26,8 @@ import {
 } from "lucide-react";
 
 export default function AnalyzerPage() {
+  const { data: session, status } = useSession();
+
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("javascript");
   const [result, setResult] = useState(null);
@@ -39,44 +42,75 @@ export default function AnalyzerPage() {
   const [solutionLanguage, setSolutionLanguage] = useState("javascript");
   const [lastAnalyzedCode, setLastAnalyzedCode] = useState("");
 
-  // Persistence: Load on Mount
+  // Persistence: Load on Mount (User Specific)
   useEffect(() => {
-    const savedCode = localStorage.getItem("analyzer_code");
-    const savedLang = localStorage.getItem("analyzer_lang");
-    const savedResult = localStorage.getItem("analyzer_result");
-    const savedHint = localStorage.getItem("analyzer_hint");
-    const savedSolutions = localStorage.getItem("analyzer_solutions");
-    const savedSolLang = localStorage.getItem("analyzer_sol_lang");
+    if (status === "loading") return;
 
-    if (savedCode) {
-      setCode(savedCode);
-      setLastAnalyzedCode(savedCode);
+    if (status === "unauthenticated") {
+      // Clear state on logout
+      setCode("");
+      setLastAnalyzedCode("");
+      setResult(null);
+      setHint(null);
+      setSolutions({});
+      return;
     }
-    if (savedLang) setLanguage(savedLang);
-    if (savedResult) setResult(JSON.parse(savedResult));
-    if (savedHint) setHint(savedHint);
-    if (savedSolutions) setSolutions(JSON.parse(savedSolutions));
-    if (savedSolLang) setSolutionLanguage(savedSolLang);
-  }, []);
+
+    if (status === "authenticated" && session?.user?.email) {
+      const prefix = `analyzer_${session.user.email}`;
+
+      const savedCode = localStorage.getItem(`${prefix}_code`);
+      const savedLang = localStorage.getItem(`${prefix}_lang`);
+      const savedResult = localStorage.getItem(`${prefix}_result`);
+      const savedHint = localStorage.getItem(`${prefix}_hint`);
+      const savedSolutions = localStorage.getItem(`${prefix}_solutions`);
+      const savedSolLang = localStorage.getItem(`${prefix}_sol_lang`);
+
+      if (savedCode) {
+        setCode(savedCode);
+        setLastAnalyzedCode(savedCode);
+      }
+      if (savedLang) setLanguage(savedLang);
+      if (savedResult) setResult(JSON.parse(savedResult));
+      if (savedHint) setHint(savedHint);
+      if (savedSolutions) setSolutions(JSON.parse(savedSolutions));
+      if (savedSolLang) setSolutionLanguage(savedSolLang);
+    }
+  }, [status, session]);
 
   // Persistence: Save on Change
+  // Persistence: Save on Change (User Specific)
   useEffect(() => {
-    localStorage.setItem("analyzer_code", code);
-    localStorage.setItem("analyzer_lang", language);
+    if (status !== "authenticated" || !session?.user?.email) return;
 
-    if (result) localStorage.setItem("analyzer_result", JSON.stringify(result));
-    else localStorage.removeItem("analyzer_result");
+    const prefix = `analyzer_${session.user.email}`;
 
-    if (hint) localStorage.setItem("analyzer_hint", hint);
-    else localStorage.removeItem("analyzer_hint");
+    localStorage.setItem(`${prefix}_code`, code);
+    localStorage.setItem(`${prefix}_lang`, language);
+
+    if (result)
+      localStorage.setItem(`${prefix}_result`, JSON.stringify(result));
+    else localStorage.removeItem(`${prefix}_result`);
+
+    if (hint) localStorage.setItem(`${prefix}_hint`, hint);
+    else localStorage.removeItem(`${prefix}_hint`);
 
     if (Object.keys(solutions).length > 0)
-      localStorage.setItem("analyzer_solutions", JSON.stringify(solutions));
-    else localStorage.removeItem("analyzer_solutions");
+      localStorage.setItem(`${prefix}_solutions`, JSON.stringify(solutions));
+    else localStorage.removeItem(`${prefix}_solutions`);
 
     if (solutionLanguage)
-      localStorage.setItem("analyzer_sol_lang", solutionLanguage);
-  }, [code, language, result, hint, solutions, solutionLanguage]);
+      localStorage.setItem(`${prefix}_sol_lang`, solutionLanguage);
+  }, [
+    code,
+    language,
+    result,
+    hint,
+    solutions,
+    solutionLanguage,
+    status,
+    session,
+  ]);
 
   // Handle Code Change: Just update code, don't reset yet
   const handleCodeChange = (e) => {
