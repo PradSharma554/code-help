@@ -35,6 +35,7 @@ export default function AnalyzerPage() {
   const [assistLoading, setAssistLoading] = useState(null); // 'hint' or 'solution'
 
   const [showSolutionModal, setShowSolutionModal] = useState(false);
+  const [showHintModal, setShowHintModal] = useState(false); // New state
   const [solutionLanguage, setSolutionLanguage] = useState("javascript");
   const [lastAnalyzedCode, setLastAnalyzedCode] = useState("");
 
@@ -119,7 +120,12 @@ export default function AnalyzerPage() {
   const handleGetHint = async () => {
     if (!code.trim()) return;
 
-    checkAndResetStaleData(); // Reset if code is stale
+    checkAndResetStaleData();
+
+    if (hint && code === lastAnalyzedCode) {
+      setShowHintModal(true);
+      return;
+    }
 
     setAssistLoading("hint");
     try {
@@ -130,13 +136,14 @@ export default function AnalyzerPage() {
           code,
           language,
           type: "hint",
-          previousHints: [], // No history needed for single hint mode
+          previousHints: [],
         }),
       });
       const data = await res.json();
       if (data.result) {
         setHint(data.result);
-        setLastAnalyzedCode(code); // Mark this code as having received a hint
+        setLastAnalyzedCode(code);
+        setShowHintModal(true);
       }
     } catch (e) {
       console.error(e);
@@ -148,12 +155,9 @@ export default function AnalyzerPage() {
   const handleGetSolution = async (lang = language) => {
     if (!code.trim()) return;
 
-    // If code has changed, reset all outputs and proceed to fetch
     if (code !== lastAnalyzedCode) {
-      checkAndResetStaleData(); // This will reset solution too
-      // Fall through to fetch new solution
+      checkAndResetStaleData();
     } else {
-      // Code is the same. If we already have a solution for this exact language, just open modal
       if (solution && lang === solutionLanguage) {
         setShowSolutionModal(true);
         return;
@@ -161,7 +165,7 @@ export default function AnalyzerPage() {
     }
 
     setAssistLoading("solution");
-    setSolutionLanguage(lang); // Sync language
+    setSolutionLanguage(lang);
     try {
       const res = await fetch("/api/analyzer/assist", {
         method: "POST",
@@ -171,8 +175,8 @@ export default function AnalyzerPage() {
       const data = await res.json();
       if (data.result) {
         setSolution(data.result);
-        setShowSolutionModal(true); // Open immediately
-        setLastAnalyzedCode(code); // Mark this code as having received a solution
+        setShowSolutionModal(true);
+        setLastAnalyzedCode(code);
       }
     } catch (e) {
       console.error(e);
@@ -203,87 +207,94 @@ export default function AnalyzerPage() {
           </select>
         </div>
 
-        <div className="grow w-full border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 min-h-[400px] bg-[#1d1f21] relative">
-          <Editor
-            value={code}
-            onValueChange={(newCode) =>
-              handleCodeChange({ target: { value: newCode } })
-            }
-            highlight={(code) =>
-              highlight(
-                code,
-                languages[language] || languages.javascript,
-                language,
-              )
-            }
-            padding={24}
-            style={{
-              fontFamily: '"Fira Code", "Fira Mono", monospace',
-              fontSize: 14,
-              minHeight: "400px",
-              backgroundColor: "transparent",
-              color: "#f8f8f2",
-            }}
-            className="min-h-[400px]"
-            textareaClassName="focus:outline-none"
-          />
-        </div>
+        <div className="flex flex-row gap-4 grow min-h-[500px]">
+          {/* Sidebar Buttons */}
+          <div className="flex flex-col gap-4 mt-2 shrink-0">
+            {/* Analyze Button */}
+            <div className="relative group">
+              <button
+                onClick={handleAnalyze}
+                disabled={loading || !code.trim()}
+                className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg hover:bg-indigo-700 disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
+              >
+                {loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <Play className="w-6 h-6" />
+                )}
+              </button>
+              <span className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 whitespace-nowrap z-50 pointer-events-none transition-opacity shadow-xl border border-slate-700">
+                Analyze Complexity
+                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-slate-800"></div>
+              </span>
+            </div>
 
-        <div className="flex gap-3 mt-4">
-          <button
-            onClick={handleAnalyze}
-            disabled={loading || !code.trim()}
-            className="flex-1 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Play className="w-5 h-5" />
-            )}
-            Analyze Complexity
-          </button>
+            {/* Hint Button */}
+            <div className="relative group">
+              <button
+                onClick={handleGetHint}
+                disabled={assistLoading === "hint" || !code.trim()}
+                className="p-3 bg-amber-500 text-white rounded-xl shadow-lg hover:bg-amber-600 disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
+              >
+                {assistLoading === "hint" ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <Lightbulb className="w-6 h-6" />
+                )}
+              </button>
+              <span className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 whitespace-nowrap z-50 pointer-events-none transition-opacity shadow-xl border border-slate-700">
+                Get Hint
+                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-slate-800"></div>
+              </span>
+            </div>
 
-          <button
-            onClick={handleGetHint}
-            disabled={assistLoading === "hint" || !code.trim()}
-            className="px-6 py-3 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 disabled:opacity-50 flex items-center justify-center gap-2"
-            title="Get a hint to fix mistakes"
-          >
-            {assistLoading === "hint" ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Lightbulb className="w-5 h-5" />
-            )}
-            Hint
-          </button>
-
-          <button
-            onClick={() => handleGetSolution(language)}
-            disabled={assistLoading === "solution" || !code.trim()}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2"
-            title="Reveal the correct solution"
-          >
-            {assistLoading === "solution" ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Unlock className="w-5 h-5" />
-            )}
-            {/* If solution exists, just "Show Solution", else implied fetch */}
-            Show Solution
-          </button>
-        </div>
-
-        {/* Hints Display (Left Side - Below Buttons) */}
-        {hint && (
-          <div className="mt-6 animate-in slide-in-from-top-4 fade-in">
-            <h3 className="text-sm font-semibold text-amber-500 uppercase tracking-wider flex items-center gap-2 mb-3">
-              <Lightbulb className="w-4 h-4" /> Latest Hint
-            </h3>
-            <div className="p-3 bg-amber-50 text-amber-900 text-sm rounded-lg border border-amber-100 animate-in slide-in-from-top-2">
-              {hint}
+            {/* Solution Button */}
+            <div className="relative group">
+              <button
+                onClick={() => handleGetSolution(language)}
+                disabled={assistLoading === "solution" || !code.trim()}
+                className="p-3 bg-emerald-600 text-white rounded-xl shadow-lg hover:bg-emerald-700 disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
+              >
+                {assistLoading === "solution" ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <Unlock className="w-6 h-6" />
+                )}
+              </button>
+              <span className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 whitespace-nowrap z-50 pointer-events-none transition-opacity shadow-xl border border-slate-700">
+                Show Solution
+                <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-slate-800"></div>
+              </span>
             </div>
           </div>
-        )}
+
+          {/* Editor */}
+          <div className="grow w-full border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 min-h-[500px] bg-[#1d1f21] relative custom-scrollbar shadow-inner">
+            <Editor
+              value={code}
+              onValueChange={(newCode) =>
+                handleCodeChange({ target: { value: newCode } })
+              }
+              highlight={(code) =>
+                highlight(
+                  code,
+                  languages[language] || languages.javascript,
+                  language,
+                )
+              }
+              padding={24}
+              style={{
+                fontFamily: '"Fira Code", "Fira Mono", monospace',
+                fontSize: 14,
+                minHeight: "500px",
+                backgroundColor: "transparent",
+                color: "#f8f8f2",
+              }}
+              className="min-h-[500px]"
+              textareaClassName="focus:outline-none"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Output Section (Right - Analysis Only) */}
@@ -368,6 +379,39 @@ export default function AnalyzerPage() {
         )}
       </div>
 
+      {/* Hint Modal */}
+      {showHintModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col animate-in zoom-in-95">
+            <div className="p-4 border-b flex justify-between items-center bg-amber-50 rounded-t-xl">
+              <h2 className="text-lg font-bold text-amber-800 flex items-center gap-2">
+                <Lightbulb className="w-5 h-5" />
+                Helpful Hint
+              </h2>
+              <button
+                onClick={() => setShowHintModal(false)}
+                className="text-amber-800/50 hover:text-amber-900 transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 text-slate-700 text-lg leading-relaxed font-medium">
+              {hint}
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end">
+              <button
+                onClick={() => setShowHintModal(false)}
+                className="text-sm font-bold text-slate-600 hover:text-slate-900 px-4 py-2 rounded-lg hover:bg-slate-200 transition"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Solution Modal */}
       {showSolutionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
@@ -397,13 +441,16 @@ export default function AnalyzerPage() {
               </button>
             </div>
 
-            <div className="p-0 overflow-hidden flex-1 relative bg-[#1d1f21]">
+            <div className="p-0 overflow-hidden flex-1 relative bg-[#1d1f21] min-h-0">
               {assistLoading === "solution" && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
                   <Loader2 className="w-8 h-8 text-white animate-spin" />
                 </div>
               )}
-              <div className="h-full overflow-auto custom-scrollbar">
+              <div
+                className="h-full overflow-auto custom-scrollbar overscroll-contain"
+                onWheel={(e) => e.stopPropagation()}
+              >
                 <SyntaxHighlighter
                   language={solutionLanguage.toLowerCase()}
                   style={atomDark}
