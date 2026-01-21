@@ -31,11 +31,11 @@ export default function AnalyzerPage() {
   const [loading, setLoading] = useState(false);
 
   const [hint, setHint] = useState(null);
-  const [solution, setSolution] = useState(null);
+  const [solutions, setSolutions] = useState({}); // Stores solutions by language
   const [assistLoading, setAssistLoading] = useState(null); // 'hint' or 'solution'
 
   const [showSolutionModal, setShowSolutionModal] = useState(false);
-  const [showHintModal, setShowHintModal] = useState(false); // New state
+  const [showHintModal, setShowHintModal] = useState(false);
   const [solutionLanguage, setSolutionLanguage] = useState("javascript");
   const [lastAnalyzedCode, setLastAnalyzedCode] = useState("");
 
@@ -45,17 +45,17 @@ export default function AnalyzerPage() {
     const savedLang = localStorage.getItem("analyzer_lang");
     const savedResult = localStorage.getItem("analyzer_result");
     const savedHint = localStorage.getItem("analyzer_hint");
-    const savedSolution = localStorage.getItem("analyzer_solution");
+    const savedSolutions = localStorage.getItem("analyzer_solutions");
     const savedSolLang = localStorage.getItem("analyzer_sol_lang");
 
     if (savedCode) {
       setCode(savedCode);
-      setLastAnalyzedCode(savedCode); // Initialize lastAnalyzedCode
+      setLastAnalyzedCode(savedCode);
     }
     if (savedLang) setLanguage(savedLang);
     if (savedResult) setResult(JSON.parse(savedResult));
     if (savedHint) setHint(savedHint);
-    if (savedSolution) setSolution(savedSolution);
+    if (savedSolutions) setSolutions(JSON.parse(savedSolutions));
     if (savedSolLang) setSolutionLanguage(savedSolLang);
   }, []);
 
@@ -70,12 +70,13 @@ export default function AnalyzerPage() {
     if (hint) localStorage.setItem("analyzer_hint", hint);
     else localStorage.removeItem("analyzer_hint");
 
-    if (solution) localStorage.setItem("analyzer_solution", solution);
-    else localStorage.removeItem("analyzer_solution");
+    if (Object.keys(solutions).length > 0)
+      localStorage.setItem("analyzer_solutions", JSON.stringify(solutions));
+    else localStorage.removeItem("analyzer_solutions");
 
     if (solutionLanguage)
       localStorage.setItem("analyzer_sol_lang", solutionLanguage);
-  }, [code, language, result, hint, solution, solutionLanguage]);
+  }, [code, language, result, hint, solutions, solutionLanguage]);
 
   // Handle Code Change: Just update code, don't reset yet
   const handleCodeChange = (e) => {
@@ -87,7 +88,7 @@ export default function AnalyzerPage() {
     if (code !== lastAnalyzedCode) {
       setResult(null);
       setHint(null);
-      setSolution(null);
+      setSolutions({});
       setShowSolutionModal(false);
       // lastAnalyzedCode will be updated after successful API call
     }
@@ -96,10 +97,10 @@ export default function AnalyzerPage() {
   const handleAnalyze = async () => {
     if (!code.trim()) return;
 
-    checkAndResetStaleData(); // Reset if code is stale
+    checkAndResetStaleData();
 
     setLoading(true);
-    setResult(null); // Clear result immediately for new analysis
+    setResult(null);
 
     try {
       const res = await fetch("/api/analyze", {
@@ -109,7 +110,7 @@ export default function AnalyzerPage() {
       });
       const data = await res.json();
       setResult(data);
-      setLastAnalyzedCode(code); // Mark this code as analyzed
+      setLastAnalyzedCode(code);
     } catch (e) {
       console.error(e);
     } finally {
@@ -158,7 +159,9 @@ export default function AnalyzerPage() {
     if (code !== lastAnalyzedCode) {
       checkAndResetStaleData();
     } else {
-      if (solution && lang === solutionLanguage) {
+      // Check cache for specific language
+      if (solutions[lang]) {
+        setSolutionLanguage(lang);
         setShowSolutionModal(true);
         return;
       }
@@ -174,7 +177,7 @@ export default function AnalyzerPage() {
       });
       const data = await res.json();
       if (data.result) {
-        setSolution(data.result);
+        setSolutions((prev) => ({ ...prev, [lang]: data.result }));
         setShowSolutionModal(true);
         setLastAnalyzedCode(code);
       }
@@ -415,7 +418,7 @@ export default function AnalyzerPage() {
       {/* Solution Modal */}
       {showSolutionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col h-[85vh] animate-in zoom-in-95">
             <div className="p-4 border-b flex justify-between items-center bg-slate-50 rounded-t-xl">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -441,14 +444,14 @@ export default function AnalyzerPage() {
               </button>
             </div>
 
-            <div className="p-0 overflow-hidden flex-1 relative bg-[#1d1f21] min-h-0">
+            <div className="flex-1 relative bg-[#1d1f21] min-h-0 w-full">
               {assistLoading === "solution" && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
                   <Loader2 className="w-8 h-8 text-white animate-spin" />
                 </div>
               )}
               <div
-                className="h-full overflow-auto custom-scrollbar overscroll-contain"
+                className="absolute inset-0 overflow-auto custom-scrollbar overscroll-contain"
                 onWheel={(e) => e.stopPropagation()}
               >
                 <SyntaxHighlighter
@@ -465,7 +468,7 @@ export default function AnalyzerPage() {
                   showLineNumbers={true}
                   wrapLines={true}
                 >
-                  {solution || ""}
+                  {solutions[solutionLanguage] || ""}
                 </SyntaxHighlighter>
               </div>
             </div>
@@ -473,7 +476,9 @@ export default function AnalyzerPage() {
             <div className="p-4 border-t bg-gray-50 rounded-b-xl flex justify-end">
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(solution);
+                  navigator.clipboard.writeText(
+                    solutions[solutionLanguage] || "",
+                  );
                 }}
                 className="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition flex items-center gap-1"
               >
