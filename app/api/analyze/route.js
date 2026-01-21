@@ -28,7 +28,7 @@ export async function POST(req) {
         Return the response in JSON format with fields:
         "timeComplexity": "e.g. O(n log n)",
         "spaceComplexity": "e.g. O(n)",
-        "explanation": "concise technical explanation",
+        "explanation": "1 sentence max technical explanation",
         "improvements": "one or two sentences on optimization or 'Optimal'"
         
         Do not include markdown formatting (like \`\`\`json). Just return the raw JSON.
