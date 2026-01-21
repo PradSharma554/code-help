@@ -1,5 +1,15 @@
 "use client";
 
+import Editor from "react-simple-code-editor";
+import { highlight, languages } from "prismjs/components/prism-core";
+import "prismjs/components/prism-clike";
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-python";
+import "prismjs/components/prism-java";
+import "prismjs/components/prism-c";
+import "prismjs/components/prism-cpp";
+import "prismjs/themes/prism-dark.css"; // Using dark theme
+
 import { useState, useEffect } from "react";
 
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -193,12 +203,31 @@ export default function AnalyzerPage() {
           </select>
         </div>
 
-        <textarea
-          value={code}
-          onChange={handleCodeChange}
-          placeholder="Paste your solution here..."
-          className="grow w-full p-4 font-mono text-sm bg-slate-900 text-slate-50 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[400px]"
-        ></textarea>
+        <div className="grow w-full border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 min-h-[400px] bg-[#1d1f21] relative">
+          <Editor
+            value={code}
+            onValueChange={(newCode) =>
+              handleCodeChange({ target: { value: newCode } })
+            }
+            highlight={(code) =>
+              highlight(
+                code,
+                languages[language] || languages.javascript,
+                language,
+              )
+            }
+            padding={24}
+            style={{
+              fontFamily: '"Fira Code", "Fira Mono", monospace',
+              fontSize: 14,
+              minHeight: "400px",
+              backgroundColor: "transparent",
+              color: "#f8f8f2",
+            }}
+            className="min-h-[400px]"
+            textareaClassName="focus:outline-none"
+          />
+        </div>
 
         <div className="flex gap-3 mt-4">
           <button
