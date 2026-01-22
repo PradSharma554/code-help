@@ -15,6 +15,7 @@ import {
   DownloadCloud,
   X,
   Loader2,
+  Edit,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -102,8 +103,12 @@ function Dashboard() {
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [savedUsername, setSavedUsername] = useState("");
+
   useEffect(() => {
     fetchStats();
+    const stored = localStorage.getItem("leetcode_username");
+    if (stored) setSavedUsername(stored);
   }, []);
 
   const fetchStats = () => {
@@ -132,6 +137,7 @@ function Dashboard() {
         alert(data.message);
         setShowSyncModal(false);
         localStorage.setItem("leetcode_username", usernameToSync);
+        setSavedUsername(usernameToSync);
         fetchStats();
       } else {
         alert(data.error);
@@ -176,7 +182,32 @@ function Dashboard() {
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-slate-800">Your Overview</h2>
+        <div>
+          <h2 className="text-3xl font-bold text-slate-800">Your Overview</h2>
+          {savedUsername && (
+            <div className="flex items-center gap-2 mt-1 animate-in fade-in slide-in-from-left-2">
+              <span className="text-sm text-slate-500">Connected as:</span>
+              <a
+                href={`https://leetcode.com/${savedUsername}/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1"
+              >
+                {savedUsername}
+              </a>
+              <button
+                onClick={() => {
+                  setLeetcodeUsername(savedUsername);
+                  setShowSyncModal(true);
+                }}
+                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition"
+                title="Change Username"
+              >
+                <Edit className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
         <div className="flex gap-3">
           <button
             onClick={() => {
