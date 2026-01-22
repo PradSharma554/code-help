@@ -115,19 +115,23 @@ function Dashboard() {
       });
   };
 
-  const handleSync = async () => {
-    if (!leetcodeUsername.trim()) return;
+  const handleSync = async (savedUsername) => {
+    const usernameToSync =
+      typeof savedUsername === "string" ? savedUsername : leetcodeUsername;
+
+    if (!usernameToSync.trim()) return;
     setIsSyncing(true);
     try {
       const res = await fetch("/api/leetcode/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: leetcodeUsername }),
+        body: JSON.stringify({ username: usernameToSync }),
       });
       const data = await res.json();
       if (res.ok) {
         alert(data.message);
         setShowSyncModal(false);
+        localStorage.setItem("leetcode_username", usernameToSync);
         fetchStats();
       } else {
         alert(data.error);
@@ -175,10 +179,23 @@ function Dashboard() {
         <h2 className="text-3xl font-bold text-slate-800">Your Overview</h2>
         <div className="flex gap-3">
           <button
-            onClick={() => setShowSyncModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition shadow-lg hover:shadow-orange-500/30"
+            onClick={() => {
+              const saved = localStorage.getItem("leetcode_username");
+              if (saved) {
+                handleSync(saved);
+              } else {
+                setShowSyncModal(true);
+              }
+            }}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition shadow-lg hover:shadow-orange-500/30 disabled:opacity-70"
           >
-            <DownloadCloud className="w-4 h-4" /> Sync LeetCode
+            {isSyncing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <DownloadCloud className="w-4 h-4" />
+            )}
+            {isSyncing ? "Syncing..." : "Sync LeetCode"}
           </button>
           <Link
             href="/journal"
