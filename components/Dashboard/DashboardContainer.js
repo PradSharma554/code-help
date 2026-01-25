@@ -16,7 +16,12 @@ import RecentLogs from "./RecentLogs";
 import SyncModal from "./SyncModal";
 
 export default function DashboardContainer() {
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError,
+    error,
+  } = useDashboardStats();
   const syncLeetCode = useSyncLeetCode();
   const refreshInsight = useRefreshInsight();
 
@@ -61,6 +66,14 @@ export default function DashboardContainer() {
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
       </div>
     );
+
+  if (isError) {
+    return (
+      <div className="text-center py-12 text-red-500 bg-red-50 rounded-xl border border-red-100">
+        Error loading dashboard: {error.message}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">

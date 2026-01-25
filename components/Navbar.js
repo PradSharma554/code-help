@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Brain, FileDigit, LogOut } from "lucide-react";
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   return (
     <nav className="border-b bg-white shadow-sm sticky top-0 z-10">
@@ -19,7 +19,9 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-6">
-          {session ? (
+          {status === "loading" ? (
+            <div className="w-24 h-8 bg-slate-100 rounded animate-pulse"></div>
+          ) : session ? (
             <>
               <Link
                 href="/journal"
