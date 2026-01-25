@@ -30,38 +30,26 @@ export default function AnalyzerContainer() {
 
   // Persistence: Load on Mount (User Specific)
   useEffect(() => {
-    if (status === "loading") return;
+    if (status !== "authenticated" || !session?.user?.email) return;
 
-    if (status === "unauthenticated") {
-      // Clear state on logout
-      setCode("");
-      setLastAnalyzedCode("");
-      setResult(null);
-      setHint(null);
-      setSolutions({});
-      return;
+    const prefix = `analyzer_${session.user.email}`;
+
+    const savedCode = localStorage.getItem(`${prefix}_code`);
+    const savedLang = localStorage.getItem(`${prefix}_lang`);
+    const savedResult = localStorage.getItem(`${prefix}_result`);
+    const savedHint = localStorage.getItem(`${prefix}_hint`);
+    const savedSolutions = localStorage.getItem(`${prefix}_solutions`);
+    const savedSolLang = localStorage.getItem(`${prefix}_sol_lang`);
+
+    if (savedCode) {
+      setCode(savedCode);
+      setLastAnalyzedCode(savedCode);
     }
-
-    if (status === "authenticated" && session?.user?.email) {
-      const prefix = `analyzer_${session.user.email}`;
-
-      const savedCode = localStorage.getItem(`${prefix}_code`);
-      const savedLang = localStorage.getItem(`${prefix}_lang`);
-      const savedResult = localStorage.getItem(`${prefix}_result`);
-      const savedHint = localStorage.getItem(`${prefix}_hint`);
-      const savedSolutions = localStorage.getItem(`${prefix}_solutions`);
-      const savedSolLang = localStorage.getItem(`${prefix}_sol_lang`);
-
-      if (savedCode) {
-        setCode(savedCode);
-        setLastAnalyzedCode(savedCode);
-      }
-      if (savedLang) setLanguage(savedLang);
-      if (savedResult) setResult(JSON.parse(savedResult));
-      if (savedHint) setHint(savedHint);
-      if (savedSolutions) setSolutions(JSON.parse(savedSolutions));
-      if (savedSolLang) setSolutionLanguage(savedSolLang);
-    }
+    if (savedLang) setLanguage(savedLang);
+    if (savedResult) setResult(JSON.parse(savedResult));
+    if (savedHint) setHint(savedHint);
+    if (savedSolutions) setSolutions(JSON.parse(savedSolutions));
+    if (savedSolLang) setSolutionLanguage(savedSolLang);
   }, [status, session]);
 
   // Persistence: Save on Change (User Specific)
@@ -180,14 +168,6 @@ export default function AnalyzerContainer() {
       },
     );
   };
-
-  if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-6xl mx-auto min-h-[80vh] flex flex-col md:flex-row gap-6 relative">

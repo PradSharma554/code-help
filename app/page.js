@@ -5,8 +5,14 @@ import Link from "next/link";
 import { LineChart, Zap } from "lucide-react";
 import DashboardContainer from "../components/Dashboard/DashboardContainer";
 
+import PageLoader from "../components/Common/PageLoader";
+
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <PageLoader />;
+  }
 
   if (session) {
     return <DashboardContainer />;

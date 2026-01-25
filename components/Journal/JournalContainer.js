@@ -10,16 +10,8 @@ import SearchBar from "./SearchBar";
 import MistakeList from "./MistakeList";
 
 export default function JournalContainer() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!session) {
-      router.push("/login");
-    }
-  }, [session, status, router]);
+  const { data: session } = useSession();
+  const router = useRouter(); // Kept if needed later, though used mainly for redirects before
 
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("");
@@ -40,16 +32,6 @@ export default function JournalContainer() {
       m.problemName.toLowerCase().includes(filter.toLowerCase()) ||
       m.topic.toLowerCase().includes(filter.toLowerCase()),
   );
-
-  if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  if (!session) return null;
 
   return (
     <div className="max-w-4xl mx-auto relative">
