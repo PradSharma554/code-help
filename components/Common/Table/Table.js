@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useQueryState, parseAsInteger } from "nuqs";
+import Pagination from "../Pagination/Pagination";
 
 export default function Table({
   columns,
@@ -7,7 +9,20 @@ export default function Table({
   onRowClick,
   keyExtractor = (item) => item.id || item._id,
   className = "",
+  pagination = false,
+  pageSize = 10,
 }) {
+  const [currentPage, setCurrentPage] = useQueryState(
+    "page",
+    parseAsInteger.withDefault(1),
+  );
+
+  const paginatedData = useMemo(() => {
+    if (!pagination || !data) return data;
+    const start = (currentPage - 1) * pageSize;
+    return data.slice(start, start + pageSize);
+  }, [data, currentPage, pageSize, pagination]);
+
   if (!data || data.length === 0) {
     return (
       <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed">
@@ -16,9 +31,13 @@ export default function Table({
     );
   }
 
+  const totalPages = Math.ceil((data?.length || 0) / pageSize);
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, data?.length || 0);
+
   return (
     <div
-      className={`w-full overflow-hidden border rounded-xl bg-white shadow-sm ${className}`}
+      className={`w-full overflow-hidden border rounded-xl bg-white shadow-sm flex flex-col ${className}`}
     >
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
@@ -46,7 +65,7 @@ export default function Table({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {data.map((row, rowIndex) => (
+            {paginatedData.map((row, rowIndex) => (
               <tr
                 key={keyExtractor(row)}
                 onClick={() => onRowClick && onRowClick(row)}
@@ -71,6 +90,17 @@ export default function Table({
           </tbody>
         </table>
       </div>
+
+      {pagination && data.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={data.length}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
+      )}
     </div>
   );
 }

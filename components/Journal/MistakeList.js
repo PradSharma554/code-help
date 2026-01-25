@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { Eye } from "lucide-react";
 import { useState } from "react";
 import MistakeDetailModal from "./MistakeDetailModal";
-import Tooltip from "../Common/Tooltip";
+import TruncatedText from "../Common/TruncatedText";
 
 export default function MistakeList({ mistakes }) {
   const [selectedMistakeId, setSelectedMistakeId] = useState(null);
@@ -16,11 +16,11 @@ export default function MistakeList({ mistakes }) {
       key: "problemName",
       render: (row) => (
         <div>
-          <Tooltip title={row.problemName}>
+          <TruncatedText>
             <div className="font-bold my-3 line-clamp-1 text-slate-900">
               {row.problemName}
             </div>
-          </Tooltip>
+          </TruncatedText>
           {row.complexityAnalysis?.time && (
             <div className="text-xs text-slate-400 font-mono mt-1">
               TC: {row.complexityAnalysis.time}
@@ -42,8 +42,8 @@ export default function MistakeList({ mistakes }) {
       header: "Topic",
       key: "topic",
       render: (row) => (
-        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs rounded-full border border-indigo-100">
-          {row.topic}
+        <span className="px-2 py-0.5 w-max line-clamp-1 bg-indigo-50 text-indigo-700 text-xs rounded-full border border-indigo-100">
+          <TruncatedText limit={10}>{row.topic}</TruncatedText>
         </span>
       ),
     },
@@ -107,7 +107,12 @@ export default function MistakeList({ mistakes }) {
 
   return (
     <>
-      <Table columns={columns} data={mistakes} />
+      <Table
+        columns={columns}
+        data={mistakes}
+        pagination={true}
+        pageSize={10}
+      />
       <MistakeDetailModal
         isOpen={!!selectedMistakeId}
         onClose={() => setSelectedMistakeId(null)}
