@@ -114,7 +114,7 @@ export async function POST(req) {
           mistakeType: mistakeType,
           reflection:
             "Auto-synced from LeetCode. Please update with your reflection.",
-          codeSnippet: `Language: ${sub.lang}`,
+          codeSnippet: "",
           createdAt: submissionDate, // Backdate to actual submission time
         });
         newEntries++;

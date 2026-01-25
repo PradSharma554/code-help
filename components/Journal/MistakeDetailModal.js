@@ -1,7 +1,40 @@
-import { X, Calendar, Code, AlertTriangle, Layers } from "lucide-react";
+import {
+  X,
+  Calendar,
+  Code,
+  AlertTriangle,
+  Layers,
+  Edit2,
+  Check,
+  Loader2,
+} from "lucide-react";
 import clsx from "clsx";
+import { useState, useEffect } from "react";
+import { useUpdateMistake } from "../../hooks/useJournal";
 
 export default function MistakeDetailModal({ isOpen, onClose, mistake }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [reflectionText, setReflectionText] = useState("");
+  const updateMistake = useUpdateMistake();
+
+  useEffect(() => {
+    if (mistake) {
+      setReflectionText(mistake.reflection);
+      setIsEditing(false);
+    }
+  }, [mistake]);
+
+  const handleSave = () => {
+    updateMistake.mutate(
+      { id: mistake._id, reflection: reflectionText },
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+        },
+      },
+    );
+  };
+
   if (!isOpen || !mistake) return null;
 
   return (
@@ -64,25 +97,68 @@ export default function MistakeDetailModal({ isOpen, onClose, mistake }) {
 
           {/* Reflection */}
           <div>
-            <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-2">
-              <Layers className="w-4 h-4" /> Reflection
-            </h3>
-            <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-slate-700 leading-relaxed italic">
-              "{mistake.reflection}"
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
+                <Layers className="w-4 h-4" /> Reflection
+              </h3>
+              {!isEditing ? (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-indigo-600 hover:text-indigo-700 text-xs font-medium flex items-center gap-1"
+                >
+                  <Edit2 className="w-3 h-3" /> Edit
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="text-slate-500 hover:text-slate-600 text-xs font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={updateMistake.isPending}
+                    className="text-emerald-600 hover:text-emerald-700 text-xs font-medium flex items-center gap-1 disabled:opacity-50"
+                  >
+                    {updateMistake.isPending ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Check className="w-3 h-3" />
+                    )}
+                    Save
+                  </button>
+                </div>
+              )}
             </div>
+
+            {isEditing ? (
+              <textarea
+                value={reflectionText}
+                onChange={(e) => setReflectionText(e.target.value)}
+                className="w-full p-4 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-700 leading-relaxed"
+                rows={4}
+              />
+            ) : (
+              <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-slate-700 leading-relaxed italic">
+                "{mistake.reflection}"
+              </div>
+            )}
           </div>
 
           {/* Code Snippet */}
-          {mistake.codeSnippet && (
-            <div>
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-2">
-                <Code className="w-4 h-4" /> Code Snippet
-              </h3>
-              <div className="bg-[#1d1f21] p-4 rounded-xl overflow-x-auto text-sm text-[#f8f8f2] font-mono whitespace-pre custom-scrollbar">
-                {mistake.codeSnippet}
+          {mistake.codeSnippet &&
+            mistake.codeSnippet.trim() !== "" &&
+            !/^Language:\s*\w+$/.test(mistake.codeSnippet.trim()) && (
+              <div>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-2">
+                  <Code className="w-4 h-4" /> Code Snippet
+                </h3>
+                <div className="bg-[#1d1f21] p-4 rounded-xl overflow-x-auto text-sm text-[#f8f8f2] font-mono whitespace-pre custom-scrollbar">
+                  {mistake.codeSnippet}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Complexity Analysis */}
           {mistake.complexityAnalysis && (

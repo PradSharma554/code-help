@@ -40,8 +40,26 @@ export const useCreateMistake = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mistakes"] });
-      // Also invalidate dashboard stats as new mistake affects it
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+    },
+  });
+};
+
+export const useUpdateMistake = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, reflection }) => {
+      const res = await fetch(`/api/mistakes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reflection }),
+      });
+      if (!res.ok) throw new Error("Failed to update entry");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mistakes"] });
     },
   });
 };

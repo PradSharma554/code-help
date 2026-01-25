@@ -5,7 +5,9 @@ import { useState } from "react";
 import MistakeDetailModal from "./MistakeDetailModal";
 
 export default function MistakeList({ mistakes }) {
-  const [selectedMistake, setSelectedMistake] = useState(null);
+  const [selectedMistakeId, setSelectedMistakeId] = useState(null);
+
+  const selectedMistake = mistakes.find((m) => m._id === selectedMistakeId);
 
   const columns = [
     {
@@ -87,7 +89,7 @@ export default function MistakeList({ mistakes }) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setSelectedMistake(row);
+            setSelectedMistakeId(row._id);
           }}
           className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition"
           title="View Details"
@@ -102,8 +104,8 @@ export default function MistakeList({ mistakes }) {
     <>
       <Table columns={columns} data={mistakes} />
       <MistakeDetailModal
-        isOpen={!!selectedMistake}
-        onClose={() => setSelectedMistake(null)}
+        isOpen={!!selectedMistakeId}
+        onClose={() => setSelectedMistakeId(null)}
         mistake={selectedMistake}
       />
     </>
