@@ -80,11 +80,11 @@ export default function DashboardContainer() {
 
       <SuggestedProblems problems={stats?.suggestedProblems} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <LeetCodeProgress leetcodeStats={stats?.leetcodeStats} />
         <MistakeDistribution mistakeTypeStats={stats?.mistakeTypeStats} />
-        <WeakTopics topicStats={stats?.topicStats} />
       </div>
+      <WeakTopics topicStats={stats?.topicStats} />
 
       <RecentLogs recentMistakes={stats?.recentMistakes} />
 
