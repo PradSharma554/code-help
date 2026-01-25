@@ -16,7 +16,7 @@ export default function AnalyzerContainer() {
   const [language, setLanguage] = useState("javascript");
   const [result, setResult] = useState(null);
 
-  const [hint, setHint] = useState(null);
+  const [hints, setHints] = useState({}); // Stores hints by language
   const [solutions, setSolutions] = useState({}); // Stores solutions by language
   const [assistType, setAssistType] = useState(null); // 'hint' or 'solution'
 
@@ -37,7 +37,7 @@ export default function AnalyzerContainer() {
     const savedCode = localStorage.getItem(`${prefix}_code`);
     const savedLang = localStorage.getItem(`${prefix}_lang`);
     const savedResult = localStorage.getItem(`${prefix}_result`);
-    const savedHint = localStorage.getItem(`${prefix}_hint`);
+    const savedHints = localStorage.getItem(`${prefix}_hints`);
     const savedSolutions = localStorage.getItem(`${prefix}_solutions`);
     const savedSolLang = localStorage.getItem(`${prefix}_sol_lang`);
 
@@ -47,7 +47,7 @@ export default function AnalyzerContainer() {
     }
     if (savedLang) setLanguage(savedLang);
     if (savedResult) setResult(JSON.parse(savedResult));
-    if (savedHint) setHint(savedHint);
+    if (savedHints) setHints(JSON.parse(savedHints));
     if (savedSolutions) setSolutions(JSON.parse(savedSolutions));
     if (savedSolLang) setSolutionLanguage(savedSolLang);
   }, [status, session]);
@@ -65,8 +65,9 @@ export default function AnalyzerContainer() {
       localStorage.setItem(`${prefix}_result`, JSON.stringify(result));
     else localStorage.removeItem(`${prefix}_result`);
 
-    if (hint) localStorage.setItem(`${prefix}_hint`, hint);
-    else localStorage.removeItem(`${prefix}_hint`);
+    if (Object.keys(hints).length > 0)
+      localStorage.setItem(`${prefix}_hints`, JSON.stringify(hints));
+    else localStorage.removeItem(`${prefix}_hints`);
 
     if (Object.keys(solutions).length > 0)
       localStorage.setItem(`${prefix}_solutions`, JSON.stringify(solutions));
@@ -78,7 +79,7 @@ export default function AnalyzerContainer() {
     code,
     language,
     result,
-    hint,
+    hints,
     solutions,
     solutionLanguage,
     status,
@@ -92,7 +93,7 @@ export default function AnalyzerContainer() {
   const checkAndResetStaleData = () => {
     if (code !== lastAnalyzedCode) {
       setResult(null);
-      setHint(null);
+      setHints({});
       setSolutions({});
       setShowSolutionModal(false);
     }
@@ -118,7 +119,7 @@ export default function AnalyzerContainer() {
     if (!code.trim()) return;
     checkAndResetStaleData();
 
-    if (hint && code === lastAnalyzedCode) {
+    if (hints[language] && code === lastAnalyzedCode) {
       setShowHintModal(true);
       return;
     }
@@ -129,7 +130,7 @@ export default function AnalyzerContainer() {
       {
         onSuccess: (data) => {
           if (data.result) {
-            setHint(data.result);
+            setHints((prev) => ({ ...prev, [language]: data.result }));
             setLastAnalyzedCode(code);
             setShowHintModal(true);
           }
@@ -216,7 +217,7 @@ export default function AnalyzerContainer() {
       <HintModal
         isOpen={showHintModal}
         onClose={() => setShowHintModal(false)}
-        hint={hint}
+        hint={hints[language]}
       />
 
       <SolutionModal
