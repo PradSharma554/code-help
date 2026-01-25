@@ -1,19 +1,80 @@
-import MistakeCard from "./MistakeCard";
+import Table from "../Common/Table/Table";
+import clsx from "clsx";
 
 export default function MistakeList({ mistakes }) {
-  if (!mistakes || mistakes.length === 0) {
-    return (
-      <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed">
-        No entries found. Start logging your grind!
-      </div>
-    );
-  }
+  const columns = [
+    {
+      header: "Problem",
+      key: "problemName",
+      render: (row) => (
+        <div>
+          <div className="font-bold text-slate-900">{row.problemName}</div>
+          {row.complexityAnalysis?.time && (
+            <div className="text-xs text-slate-400 font-mono mt-1">
+              TC: {row.complexityAnalysis.time}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: "Platform",
+      key: "platform",
+      render: (row) => (
+        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full border">
+          {row.platform}
+        </span>
+      ),
+    },
+    {
+      header: "Topic",
+      key: "topic",
+      render: (row) => (
+        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs rounded-full border border-indigo-100">
+          {row.topic}
+        </span>
+      ),
+    },
+    {
+      header: "Mistake Type",
+      key: "mistakeType",
+      render: (row) => (
+        <span
+          className={clsx(
+            "text-xs font-semibold px-2 py-1 rounded inline-block",
+            {
+              "bg-red-50 text-red-700":
+                row.mistakeType === "Wrong Approach" ||
+                row.mistakeType === "Logic Bug",
+              "bg-yellow-50 text-yellow-700": row.mistakeType === "TLE",
+              "bg-orange-50 text-orange-700": row.mistakeType === "Edge Case",
+              "bg-slate-100 text-slate-600": row.mistakeType === "Other",
+            },
+          )}
+        >
+          {row.mistakeType}
+        </span>
+      ),
+    },
+    {
+      header: "Reflection",
+      key: "reflection",
+      render: (row) => (
+        <div className="max-w-md truncate text-slate-600 italic border-l-2 border-indigo-200 pl-2">
+          "{row.reflection}"
+        </div>
+      ),
+    },
+    {
+      header: "Date",
+      key: "createdAt",
+      render: (row) => (
+        <span className="text-xs text-slate-400">
+          {new Date(row.createdAt).toLocaleDateString()}
+        </span>
+      ),
+    },
+  ];
 
-  return (
-    <div className="space-y-4">
-      {mistakes.map((mistake) => (
-        <MistakeCard key={mistake._id} mistake={mistake} />
-      ))}
-    </div>
-  );
+  return <Table columns={columns} data={mistakes} />;
 }
