@@ -5,6 +5,8 @@ export default function Pagination({
   currentPage,
   totalPages,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
   totalItems,
   startIndex,
   endIndex,
@@ -43,10 +45,25 @@ export default function Pagination({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-t border-gray-200 bg-white rounded-b-xl">
-      <div className="text-sm text-slate-500">
-        Showing <span className="font-medium text-slate-900">{startIndex}</span>{" "}
-        to <span className="font-medium text-slate-900">{endIndex}</span> of{" "}
-        <span className="font-medium text-slate-900">{totalItems}</span> results
+      <div className="flex items-center gap-4">
+        <div className="text-sm text-slate-500">
+          Showing{" "}
+          <span className="font-medium text-slate-900">{startIndex}</span> to{" "}
+          <span className="font-medium text-slate-900">{endIndex}</span> of{" "}
+          <span className="font-medium text-slate-900">{totalItems}</span>{" "}
+          results
+        </div>
+        <select
+          value={pageSize}
+          onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          className="border border-slate-300 rounded-lg text-sm p-1 text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none"
+        >
+          {[10, 20, 50, 100].map((size) => (
+            <option key={size} value={size}>
+              {size} / page
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex items-center gap-2">

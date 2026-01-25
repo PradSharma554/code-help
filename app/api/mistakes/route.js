@@ -37,10 +37,33 @@ export async function GET(req) {
     });
   }
 
-  await connectDB();
-  const mistakes = await Mistake.find({ user: session.user.id }).sort({
-    createdAt: -1,
-  });
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page") || "1");
+  const pageSize = parseInt(searchParams.get("pageSize") || "10");
+  const search = searchParams.get("search") || "";
 
-  return new NextResponse(JSON.stringify(mistakes), { status: 200 });
+  await connectDB();
+
+  const query = { user: session.user.id };
+
+  if (search) {
+    const searchRegex = { $regex: search, $options: "i" };
+    query.$or = [{ problemName: searchRegex }, { topic: searchRegex }];
+  }
+
+  const totalCount = await Mistake.countDocuments(query);
+  const mistakes = await Mistake.find(query)
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * pageSize)
+    .limit(pageSize);
+
+  return new NextResponse(
+    JSON.stringify({
+      mistakes,
+      totalCount,
+      page,
+      pageSize,
+    }),
+    { status: 200 },
+  );
 }

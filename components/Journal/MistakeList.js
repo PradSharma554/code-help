@@ -5,7 +5,11 @@ import { useState } from "react";
 import MistakeDetailModal from "./MistakeDetailModal";
 import TruncatedText from "../Common/TruncatedText";
 
-export default function MistakeList({ mistakes }) {
+export default function MistakeList({
+  mistakes,
+  totalCount = 0,
+  serverSide = false,
+}) {
   const [selectedMistakeId, setSelectedMistakeId] = useState(null);
 
   const selectedMistake = mistakes.find((m) => m._id === selectedMistakeId);
@@ -112,6 +116,8 @@ export default function MistakeList({ mistakes }) {
         data={mistakes}
         pagination={true}
         pageSize={10}
+        serverSide={serverSide}
+        totalItems={totalCount}
       />
       <MistakeDetailModal
         isOpen={!!selectedMistakeId}

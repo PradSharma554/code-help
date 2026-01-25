@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useQueryState, parseAsInteger } from "nuqs";
 import { useMistakes, useCreateMistake } from "../../hooks/useJournal";
 import JournalHeader from "./JournalHeader";
 import JournalForm from "./JournalForm";
@@ -11,12 +11,26 @@ import MistakeList from "./MistakeList";
 
 export default function JournalContainer() {
   const { data: session } = useSession();
-  const router = useRouter(); // Kept if needed later, though used mainly for redirects before
 
   const [showForm, setShowForm] = useState(false);
-  const [filter, setFilter] = useState("");
+  const [search, setSearch] = useQueryState("search", {
+    defaultValue: "",
+    throttleMs: 500,
+  });
+  const [page] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [pageSize] = useQueryState("pageSize", parseAsInteger.withDefault(10));
 
-  const { data: mistakes = [], isLoading, isError, error } = useMistakes();
+  // Fetch data with server-side params
+  const {
+    data: responseData,
+    isLoading,
+    isError,
+    error,
+  } = useMistakes({ page, pageSize, search });
+
+  const mistakes = responseData?.mistakes || [];
+  const totalCount = responseData?.totalCount || 0;
+
   const createMistake = useCreateMistake();
 
   const handleCreate = (data) => {
@@ -26,12 +40,6 @@ export default function JournalContainer() {
       },
     });
   };
-
-  const filteredMistakes = mistakes.filter(
-    (m) =>
-      m.problemName.toLowerCase().includes(filter.toLowerCase()) ||
-      m.topic.toLowerCase().includes(filter.toLowerCase()),
-  );
 
   return (
     <div className="max-w-8xl mx-auto relative">
@@ -47,7 +55,7 @@ export default function JournalContainer() {
         />
       )}
 
-      <SearchBar filter={filter} setFilter={setFilter} />
+      <SearchBar filter={search} setFilter={setSearch} />
 
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -58,7 +66,11 @@ export default function JournalContainer() {
           Error loading mistakes: {error.message}
         </div>
       ) : (
-        <MistakeList mistakes={filteredMistakes} />
+        <MistakeList
+          mistakes={mistakes}
+          totalCount={totalCount}
+          serverSide={true}
+        />
       )}
     </div>
   );

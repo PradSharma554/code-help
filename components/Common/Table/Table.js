@@ -10,18 +10,25 @@ export default function Table({
   keyExtractor = (item) => item.id || item._id,
   className = "",
   pagination = false,
-  pageSize = 10,
+  defaultPageSize = 10,
+  serverSide = false,
+  totalItems = 0, // Required if serverSide is true
 }) {
   const [currentPage, setCurrentPage] = useQueryState(
     "page",
     parseAsInteger.withDefault(1),
   );
+  const [pageSize, setPageSize] = useQueryState(
+    "pageSize",
+    parseAsInteger.withDefault(defaultPageSize),
+  );
 
   const paginatedData = useMemo(() => {
-    if (!pagination || !data) return data;
+    if (!pagination) return data;
+    if (serverSide) return data; // Data is already sliced from server
     const start = (currentPage - 1) * pageSize;
-    return data.slice(start, start + pageSize);
-  }, [data, currentPage, pageSize, pagination]);
+    return data && data.slice(start, start + pageSize);
+  }, [data, currentPage, pageSize, pagination, serverSide]);
 
   if (!data || data.length === 0) {
     return (
@@ -31,9 +38,13 @@ export default function Table({
     );
   }
 
-  const totalPages = Math.ceil((data?.length || 0) / pageSize);
+  // If serverSide, use provided totalItems. If clientSide, calculate length.
+  const actualTotalItems = serverSide ? totalItems : data?.length || 0;
+  const totalPages = Math.ceil(actualTotalItems / pageSize);
+
+  // For display "Showing X to Y"
   const startIndex = (currentPage - 1) * pageSize + 1;
-  const endIndex = Math.min(currentPage * pageSize, data?.length || 0);
+  const endIndex = Math.min(currentPage * pageSize, actualTotalItems);
 
   return (
     <div
@@ -91,12 +102,14 @@ export default function Table({
         </table>
       </div>
 
-      {pagination && data.length > 0 && (
+      {pagination && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
-          totalItems={data.length}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
+          totalItems={actualTotalItems}
           startIndex={startIndex}
           endIndex={endIndex}
         />

@@ -1,13 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-export const useMistakes = () => {
+export const useMistakes = ({ page = 1, pageSize = 10, search = "" } = {}) => {
   return useQuery({
-    queryKey: ["mistakes"],
+    queryKey: ["mistakes", page, pageSize, search],
     queryFn: async () => {
-      const res = await fetch("/api/mistakes");
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        search,
+      });
+      const res = await fetch(`/api/mistakes?${params}`);
       if (!res.ok) throw new Error("Failed to fetch mistakes");
       return res.json();
     },
+    placeholderData: (previousData) => previousData,
   });
 };
 
