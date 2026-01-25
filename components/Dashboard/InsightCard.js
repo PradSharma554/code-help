@@ -36,12 +36,12 @@ export default function InsightCard({ stats, refreshingInsight, onRefresh }) {
             ) : (
               <Zap className="w-3 h-3" />
             )}
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="hidden sm:inline cursor-pointer">Refresh</span>
           </button>
           {stats?.insight && (
             <button
               onClick={() => setIsInsightExpanded(!isInsightExpanded)}
-              className="p-1.5 bg-white border border-violet-100 text-slate-500 rounded-md hover:bg-violet-50 transition"
+              className="p-1.5 bg-white border cursor-pointer border-violet-100 text-slate-500 rounded-md hover:bg-violet-50 transition"
             >
               {isInsightExpanded ? (
                 <ChevronUp className="w-4 h-4" />

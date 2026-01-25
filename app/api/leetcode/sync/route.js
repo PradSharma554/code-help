@@ -93,7 +93,10 @@ export async function POST(req) {
 
       if (!exists) {
         // Fetch tags for topic
-        const topic = await getProblemTags(sub.titleSlug);
+        let topic = await getProblemTags(sub.titleSlug);
+        if (!topic || topic.trim() === "") {
+          topic = "General";
+        }
 
         // Map status to Mistake Type
         let mistakeType = "Other";

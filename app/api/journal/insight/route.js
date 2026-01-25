@@ -76,13 +76,13 @@ export async function POST(req) {
         
         Return your response in strictly VALID JSON format (no markdown formatting like \`\`\`json). The structure should be:
         {
-            "insight": "markdown string containing: 1. Top Weaknesses, 2. Root Cause Analysis, 3. Actionable Advice. Use bolding and emojis.",
+            "insight": "markdown string containing: 1. Top Weaknesses (Exactly 2), 2. Root Cause Analysis (Exactly 2 points), 3. Actionable Advice (Exactly 2 points). Use bolding and emojis. Keep it concise.",
             "suggestedProblems": [
                 { "problemName": "Name of problem", "difficulty": "Easy/Medium/Hard", "topic": "Main Topic", "link": "https://leetcode.com/problems/problem-slug/" }
             ]
         }
         
-        For suggestedProblems, provide 3-5 specific LeetCode problems that directly address my weaknesses identified in the journal.
+        For suggestedProblems, provide exactly 2 specific LeetCode problems that directly address my weaknesses identified in the journal.
         `;
 
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
