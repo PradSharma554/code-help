@@ -1,7 +1,12 @@
 import Table from "../Common/Table/Table";
 import clsx from "clsx";
+import { Eye } from "lucide-react";
+import { useState } from "react";
+import MistakeDetailModal from "./MistakeDetailModal";
 
 export default function MistakeList({ mistakes }) {
+  const [selectedMistake, setSelectedMistake] = useState(null);
+
   const columns = [
     {
       header: "Problem",
@@ -74,7 +79,33 @@ export default function MistakeList({ mistakes }) {
         </span>
       ),
     },
+    {
+      header: "Actions",
+      key: "actions",
+      width: "80px",
+      render: (row) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedMistake(row);
+          }}
+          className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition"
+          title="View Details"
+        >
+          <Eye className="w-5 h-5" />
+        </button>
+      ),
+    },
   ];
 
-  return <Table columns={columns} data={mistakes} />;
+  return (
+    <>
+      <Table columns={columns} data={mistakes} />
+      <MistakeDetailModal
+        isOpen={!!selectedMistake}
+        onClose={() => setSelectedMistake(null)}
+        mistake={selectedMistake}
+      />
+    </>
+  );
 }
