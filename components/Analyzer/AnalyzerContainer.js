@@ -171,11 +171,11 @@ export default function AnalyzerContainer() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto min-h-[80vh] flex flex-col md:flex-row gap-6 relative">
+    <div className="max-w-8xl mx-auto min-h-[80vh] flex flex-col md:flex-row gap-6 relative">
       {/* Input Section */}
       <div className="flex-1 flex flex-col">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-black">
+          <h1 className="text-3xl font-bold text-black">
             Code Complexity Analyzer
           </h1>
           <select

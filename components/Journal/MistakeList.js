@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { Eye } from "lucide-react";
 import { useState } from "react";
 import MistakeDetailModal from "./MistakeDetailModal";
+import Tooltip from "../Common/Tooltip";
 
 export default function MistakeList({ mistakes }) {
   const [selectedMistakeId, setSelectedMistakeId] = useState(null);
@@ -15,7 +16,11 @@ export default function MistakeList({ mistakes }) {
       key: "problemName",
       render: (row) => (
         <div>
-          <div className="font-bold text-slate-900">{row.problemName}</div>
+          <Tooltip title={row.problemName}>
+            <div className="font-bold my-3 line-clamp-1 text-slate-900">
+              {row.problemName}
+            </div>
+          </Tooltip>
           {row.complexityAnalysis?.time && (
             <div className="text-xs text-slate-400 font-mono mt-1">
               TC: {row.complexityAnalysis.time}
@@ -48,7 +53,7 @@ export default function MistakeList({ mistakes }) {
       render: (row) => (
         <span
           className={clsx(
-            "text-xs font-semibold px-2 py-1 rounded inline-block",
+            "text-xs font-semibold px-2 w-max py-1 rounded inline-block",
             {
               "bg-red-50 text-red-700":
                 row.mistakeType === "Wrong Approach" ||
@@ -67,7 +72,7 @@ export default function MistakeList({ mistakes }) {
       header: "Reflection",
       key: "reflection",
       render: (row) => (
-        <div className="max-w-md truncate text-slate-600 italic border-l-2 border-indigo-200 pl-2">
+        <div className="max-w-xs truncate text-slate-600 italic border-l-2 border-indigo-200 pl-2">
           "{row.reflection}"
         </div>
       ),

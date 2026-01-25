@@ -57,7 +57,7 @@ export default function Table({
                 {columns.map((col, colIndex) => (
                   <td
                     key={`${keyExtractor(row)}-${col.key || colIndex}`}
-                    className={`px-6 py-4 text-sm text-slate-700 ${
+                    className={`px-6 text-sm text-slate-700 ${
                       col.cellClassName || ""
                     }`}
                   >

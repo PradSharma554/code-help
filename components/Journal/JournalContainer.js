@@ -34,7 +34,7 @@ export default function JournalContainer() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto relative">
+    <div className="max-w-8xl mx-auto relative">
       <JournalHeader
         showForm={showForm}
         toggleForm={() => setShowForm(!showForm)}
