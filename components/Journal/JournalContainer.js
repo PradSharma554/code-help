@@ -1,8 +1,8 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useQueryState, parseAsInteger } from "nuqs";
+import { useDebounce } from "use-debounce";
 import { useMistakes, useCreateMistake } from "../../hooks/useJournal";
 import JournalHeader from "./JournalHeader";
 import JournalForm from "./JournalForm";
@@ -13,20 +13,37 @@ export default function JournalContainer() {
   const { data: session } = useSession();
 
   const [showForm, setShowForm] = useState(false);
-  const [search, setSearch] = useQueryState("search", {
+
+  // URL state for search (debounced)
+  const [searchQuery, setSearchQuery] = useQueryState("search", {
     defaultValue: "",
-    throttleMs: 500,
   });
+
+  // Local state for immediate input feedback
+  const [searchTerm, setSearchTerm] = useState(searchQuery);
+
+  // Sync local state with URL state on mount/update (e.g. back button)
+  useEffect(() => {
+    setSearchTerm(searchQuery);
+  }, [searchQuery]);
+
+  // Debounce the local state to update the URL state
+  const [debouncedSearch] = useDebounce(searchTerm, 500);
+
+  useEffect(() => {
+    setSearchQuery(debouncedSearch);
+  }, [debouncedSearch, setSearchQuery]);
+
   const [page] = useQueryState("page", parseAsInteger.withDefault(1));
   const [pageSize] = useQueryState("pageSize", parseAsInteger.withDefault(10));
 
-  // Fetch data with server-side params
+  // Fetch data with server-side params (using URL state which is debounced)
   const {
     data: responseData,
     isLoading,
     isError,
     error,
-  } = useMistakes({ page, pageSize, search });
+  } = useMistakes({ page, pageSize, search: searchQuery });
 
   const mistakes = responseData?.mistakes || [];
   const totalCount = responseData?.totalCount || 0;
@@ -55,7 +72,7 @@ export default function JournalContainer() {
         />
       )}
 
-      <SearchBar filter={search} setFilter={setSearch} />
+      <SearchBar filter={searchTerm} setFilter={setSearchTerm} />
 
       {isLoading ? (
         <div className="flex justify-center py-12">

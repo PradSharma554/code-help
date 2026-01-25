@@ -14,6 +14,7 @@ export const useMistakes = ({ page = 1, pageSize = 10, search = "" } = {}) => {
       return res.json();
     },
     placeholderData: (previousData) => previousData,
+    staleTime: 5 * 60 * 1000,
   });
 };
 
