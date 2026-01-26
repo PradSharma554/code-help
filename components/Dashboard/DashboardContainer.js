@@ -52,6 +52,7 @@ export default function DashboardContainer() {
         localStorage.setItem("leetcode_username", username);
         setSavedUsername(username);
         setShowSyncModal(false);
+        refreshInsight.mutate();
         alert("Synced successfully!");
       },
       onError: (err) => {

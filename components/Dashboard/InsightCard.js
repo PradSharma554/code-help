@@ -1,5 +1,6 @@
 import { Brain, Zap, ChevronUp, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import PageLoader from "../Common/PageLoader";
 
 export default function InsightCard({ stats, refreshingInsight, onRefresh }) {
   const [isInsightExpanded, setIsInsightExpanded] = useState(false);
@@ -54,7 +55,11 @@ export default function InsightCard({ stats, refreshingInsight, onRefresh }) {
       </div>
 
       {/* Insight Content */}
-      {stats && stats.insight ? (
+      {refreshingInsight ? (
+        <PageLoader
+        // height={"h-60vh"}
+        />
+      ) : stats && stats.insight ? (
         <div
           className={`relative transition-all duration-500 overflow-hidden ${isInsightExpanded ? "max-h-[2000px]" : "max-h-32"}`}
         >
