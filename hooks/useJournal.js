@@ -70,3 +70,33 @@ export const useUpdateMistake = () => {
     },
   });
 };
+
+export const useLeetCodeUsername = () => {
+  return useQuery({
+    queryKey: ["leetcodeUsername"],
+    queryFn: async () => {
+      const res = await fetch("/api/user/leetcode");
+      if (!res.ok) throw new Error("Failed to fetch username");
+      return res.json();
+    },
+  });
+};
+
+export const useUpdateLeetCodeUsername = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (username) => {
+      const res = await fetch("/api/user/leetcode", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+      if (!res.ok) throw new Error("Failed to update username");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leetcodeUsername"] });
+    },
+  });
+};

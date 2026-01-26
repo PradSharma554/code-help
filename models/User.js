@@ -36,6 +36,9 @@ const UserSchema = new mongoose.Schema(
         link: String,
       },
     ],
+    leetcodeUsername: {
+      type: String,
+    },
   },
   { timestamps: true },
 );

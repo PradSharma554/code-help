@@ -6,6 +6,10 @@ import {
   useSyncLeetCode,
   useRefreshInsight,
 } from "../../hooks/useDashboard";
+import {
+  useLeetCodeUsername,
+  useUpdateLeetCodeUsername,
+} from "../../hooks/useJournal";
 import DashboardHeader from "./DashboardHeader";
 import InsightCard from "./InsightCard";
 import SuggestedProblems from "./SuggestedProblems";
@@ -28,15 +32,22 @@ export default function DashboardContainer() {
   const [savedUsername, setSavedUsername] = useState("");
   const [showSyncModal, setShowSyncModal] = useState(false);
 
+  const { data: leetCodeData } = useLeetCodeUsername();
+  const updateLeetCodeUsername = useUpdateLeetCodeUsername();
+
+  // console.log(leetCodeData);
+
   useEffect(() => {
-    const stored = localStorage.getItem("leetcode_username");
-    if (stored) setSavedUsername(stored);
-  }, []);
+    if (leetCodeData && leetCodeData.username) {
+      setSavedUsername(leetCodeData.username);
+    } else if (leetCodeData && !leetCodeData.username) {
+      setSavedUsername("");
+    }
+  }, [leetCodeData]);
 
   const handleSyncClick = () => {
-    const stored = localStorage.getItem("leetcode_username");
-    if (stored) {
-      handleSync(stored);
+    if (savedUsername) {
+      handleSync(savedUsername);
     } else {
       setShowSyncModal(true);
     }
@@ -47,18 +58,25 @@ export default function DashboardContainer() {
   };
 
   const handleSync = async (username) => {
-    syncLeetCode.mutate(username, {
-      onSuccess: () => {
-        localStorage.setItem("leetcode_username", username);
-        setSavedUsername(username);
-        setShowSyncModal(false);
-        refreshInsight.mutate();
-        alert("Synced successfully!");
-      },
-      onError: (err) => {
-        alert(err.message || "Sync failed");
-      },
-    });
+    try {
+      // First update the username linked to the account
+      await updateLeetCodeUsername.mutateAsync(username);
+
+      // Then perform the sync
+      syncLeetCode.mutate(username, {
+        onSuccess: () => {
+          setSavedUsername(username);
+          setShowSyncModal(false);
+          refreshInsight.mutate();
+          alert("Synced successfully!");
+        },
+        onError: (err) => {
+          alert(err.message || "Sync failed");
+        },
+      });
+    } catch (error) {
+      alert("Failed to update username");
+    }
   };
 
   if (statsLoading)
