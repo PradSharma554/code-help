@@ -26,31 +26,32 @@ export default function InsightCard({ stats, refreshingInsight, onRefresh }) {
             </p>
           </div>
         </div>
+
         <div className="flex gap-2">
-          <button
-            onClick={onRefresh}
-            disabled={refreshingInsight}
-            className="text-xs font-medium px-3 py-1.5 bg-white border border-violet-100 text-violet-600 rounded-md hover:bg-violet-50 transition flex items-center gap-1.5 disabled:opacity-70 shadow-sm"
-          >
-            {refreshingInsight ? (
-              <div className="w-3 h-3 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <Zap className="w-3 h-3" />
-            )}
-            <span className="hidden sm:inline cursor-pointer">Refresh</span>
-          </button>
           {stats?.insight && (
             <button
-              onClick={() => setIsInsightExpanded(!isInsightExpanded)}
-              className="p-1.5 bg-white border cursor-pointer border-violet-100 text-slate-500 rounded-md hover:bg-violet-50 transition"
+              onClick={onRefresh}
+              disabled={refreshingInsight}
+              className="text-xs font-medium px-3 py-1.5 bg-white border border-violet-100 text-violet-600 rounded-md hover:bg-violet-50 transition flex items-center gap-1.5 disabled:opacity-70 shadow-sm"
             >
-              {isInsightExpanded ? (
-                <ChevronUp className="w-4 h-4" />
+              {refreshingInsight ? (
+                <div className="w-3 h-3 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                <ChevronDown className="w-4 h-4" />
+                <Zap className="w-3 h-3" />
               )}
+              Refresh
             </button>
           )}
+          <button
+            onClick={() => setIsInsightExpanded(!isInsightExpanded)}
+            className="p-1.5 bg-white border cursor-pointer border-violet-100 text-slate-500 rounded-md hover:bg-violet-50 transition"
+          >
+            {isInsightExpanded ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
         </div>
       </div>
 
