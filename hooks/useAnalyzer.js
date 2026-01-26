@@ -1,6 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useAnalyzeComplexity = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ code, language }) => {
       const res = await fetch("/api/analyze", {
@@ -8,13 +10,19 @@ export const useAnalyzeComplexity = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, language }),
       });
-      if (!res.ok) throw new Error("Analysis failed");
-      return res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Analysis failed");
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };
 
 export const useAssistant = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ code, language, type, previousHints = [] }) => {
       const res = await fetch("/api/analyzer/assist", {
@@ -22,8 +30,12 @@ export const useAssistant = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, language, type, previousHints }),
       });
-      if (!res.ok) throw new Error("Assistant failed");
-      return res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Assistant failed");
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 };

@@ -39,8 +39,22 @@ const UserSchema = new mongoose.Schema(
     leetcodeUsername: {
       type: String,
     },
+    credits: {
+      type: Number,
+      default: 20,
+    },
+    lastRefillDate: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true },
 );
+
+// Force re-compilation of the model if it already exists
+// This avoids the "Missing Schema Field" issue in development hot-reloading
+if (mongoose.models.User) {
+  delete mongoose.models.User;
+}
 
 export default mongoose.models.User || mongoose.model("User", UserSchema);

@@ -7,31 +7,42 @@ export default function DashboardHeader({
   isSyncingMutation,
   onSyncClick,
   onEditClick,
+  credits = 20,
 }) {
   return (
     <div className="flex items-center justify-between">
       <div>
         <h2 className="text-3xl font-bold text-slate-800">Your Overview</h2>
-        {savedUsername && (
-          <div className="flex items-center gap-2 mt-1 animate-in fade-in slide-in-from-left-2">
-            <span className="text-sm text-slate-500">Connected as:</span>
-            <a
-              href={`https://leetcode.com/${savedUsername}/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1"
-            >
-              {savedUsername}
-            </a>
-            <button
-              onClick={onEditClick}
-              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition"
-              title="Change Username"
-            >
-              <Edit className="w-3 h-3" />
-            </button>
+        <div className="flex items-center gap-4 mt-1 animate-in fade-in slide-in-from-left-2">
+          {savedUsername && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-500">Connected as:</span>
+              <a
+                href={`https://leetcode.com/${savedUsername}/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1"
+              >
+                {savedUsername}
+              </a>
+              <button
+                onClick={onEditClick}
+                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition"
+                title="Change Username"
+              >
+                <Edit className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+          <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full">
+            <span className="text-xs text-emerald-600 font-medium">
+              Credits:
+            </span>
+            <span className="text-sm font-bold text-emerald-700">
+              {credits}/20
+            </span>
           </div>
-        )}
+        </div>
       </div>
       <div className="flex gap-3">
         <button

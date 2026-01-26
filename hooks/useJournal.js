@@ -26,8 +26,9 @@ export const useAnalyzeCode = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, language }),
       });
-      if (!res.ok) throw new Error("Analysis failed");
-      return res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Analysis failed");
+      return data;
     },
   });
 };

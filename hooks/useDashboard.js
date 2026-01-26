@@ -38,7 +38,7 @@ export const useRefreshInsight = () => {
     mutationFn: async () => {
       const res = await fetch("/api/journal/insight", { method: "POST" });
       const data = await res.json();
-      if (!res.ok) throw new Error("Failed to generate insight");
+      if (!res.ok) throw new Error(data.error || "Failed to generate insight");
       return data;
     },
     onSuccess: (data) => {

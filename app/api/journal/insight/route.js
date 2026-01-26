@@ -8,6 +8,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "mock-key");
 
+import { checkAndDeductCredits } from "@/lib/rateLimit";
+
 export async function POST(req) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -18,6 +20,18 @@ export async function POST(req) {
 
   try {
     await connectDB();
+
+    // Check Quota (Cost: 5)
+    const quota = await checkAndDeductCredits(session.user.id, 5);
+    if (!quota.success) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Daily AI quota exceeded. Upgrade to Premium for more!",
+          credits: quota.credits,
+        }),
+        { status: 402 },
+      );
+    }
     // Fetch last 50 mistakes to analyze
     const mistakes = await Mistake.find({ user: session.user.id })
       .sort({ createdAt: -1 })

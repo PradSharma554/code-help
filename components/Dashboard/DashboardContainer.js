@@ -26,6 +26,9 @@ export default function DashboardContainer() {
     isError,
     error,
   } = useDashboardStats();
+
+  // console.log(stats?.credits);
+
   const syncLeetCode = useSyncLeetCode();
   const refreshInsight = useRefreshInsight();
 
@@ -102,12 +105,28 @@ export default function DashboardContainer() {
         isSyncingMutation={syncLeetCode.isPending}
         onSyncClick={handleSyncClick}
         onEditClick={handleEditClick}
+        credits={stats?.credits}
       />
 
       <InsightCard
         stats={stats}
         refreshingInsight={refreshInsight.isPending}
-        onRefresh={() => refreshInsight.mutate()}
+        onRefresh={() =>
+          refreshInsight.mutate(undefined, {
+            onError: (err) => {
+              if (
+                err.message.includes("quota") ||
+                err.message.includes("402")
+              ) {
+                alert(
+                  "You've reached your quota! Please pay $20 to use further.",
+                );
+              } else {
+                alert(err.message || "Refresh failed");
+              }
+            },
+          })
+        }
       />
 
       <SuggestedProblems problems={stats?.suggestedProblems} />

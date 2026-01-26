@@ -52,6 +52,19 @@ export async function GET(req) {
     .sort({ createdAt: -1 })
     .limit(5);
 
+  // Check for daily refill for DISPLAY purposes only
+  const now = new Date();
+  const lastRefill = user?.lastRefillDate
+    ? new Date(user.lastRefillDate)
+    : new Date(0);
+  const isNewDay = now.toDateString() !== lastRefill.toDateString();
+
+  const displayCredits = isNewDay
+    ? 20
+    : user?.credits !== undefined
+      ? user.credits
+      : 20;
+
   return new NextResponse(
     JSON.stringify({
       mistakeTypeStats,
@@ -62,6 +75,7 @@ export async function GET(req) {
       leetcodeStats: user?.leetcodeStats || null,
       mistakeCountAtLastInsight: user?.mistakeCountAtLastInsight || 0,
       totalMistakes,
+      credits: displayCredits,
     }),
     { status: 200 },
   );

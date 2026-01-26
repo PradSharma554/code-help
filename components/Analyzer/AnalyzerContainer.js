@@ -111,6 +111,16 @@ export default function AnalyzerContainer() {
           setResult(data);
           setLastAnalyzedCode(code);
         },
+        onError: (error) => {
+          if (
+            error.message.includes("quota") ||
+            error.message.includes("402")
+          ) {
+            alert("You've reached your quota! Please pay $20 to use further.");
+          } else {
+            alert(error.message || "Analysis failed");
+          }
+        },
       },
     );
   };
@@ -133,6 +143,16 @@ export default function AnalyzerContainer() {
             setHints((prev) => ({ ...prev, [language]: data.result }));
             setLastAnalyzedCode(code);
             setShowHintModal(true);
+          }
+        },
+        onError: (error) => {
+          if (
+            error.message.includes("quota") ||
+            error.message.includes("402")
+          ) {
+            alert("You've reached your quota! Please pay $20 to use further.");
+          } else {
+            alert(error.message || "Failed to get hint");
           }
         },
         onSettled: () => setAssistType(null),
@@ -163,6 +183,16 @@ export default function AnalyzerContainer() {
             setSolutions((prev) => ({ ...prev, [lang]: data.result }));
             setShowSolutionModal(true);
             setLastAnalyzedCode(code);
+          }
+        },
+        onError: (error) => {
+          if (
+            error.message.includes("quota") ||
+            error.message.includes("402")
+          ) {
+            alert("You've reached your quota! Please pay $20 to use further.");
+          } else {
+            alert(error.message || "Failed to get solution");
           }
         },
         onSettled: () => setAssistType(null),

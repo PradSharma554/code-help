@@ -1,11 +1,36 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import connectDB from "@/lib/db";
+import { checkAndDeductCredits } from "@/lib/rateLimit";
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "mock-key");
 
 export async function POST(req) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
+  }
+
   try {
     const { code, language, type, previousHints = [] } = await req.json();
+
+    // Check Quota (Cost: 1)
+    await connectDB(); // Ensure DB connection
+    const quota = await checkAndDeductCredits(session.user.id, 1);
+    if (!quota.success) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Daily AI quota exceeded.",
+          credits: quota.credits,
+        }),
+        { status: 402 },
+      );
+    }
 
     if (!process.env.GEMINI_API_KEY) {
       return new NextResponse(
