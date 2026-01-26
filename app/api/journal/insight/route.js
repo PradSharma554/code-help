@@ -21,17 +21,6 @@ export async function POST(req) {
   try {
     await connectDB();
 
-    // Check Quota (Cost: 5)
-    const quota = await checkAndDeductCredits(session.user.id, 5);
-    if (!quota.success) {
-      return new NextResponse(
-        JSON.stringify({
-          error: "Daily AI quota exceeded. Upgrade to Premium for more!",
-          credits: quota.credits,
-        }),
-        { status: 402 },
-      );
-    }
     // Fetch last 50 mistakes to analyze
     const mistakes = await Mistake.find({ user: session.user.id })
       .sort({ createdAt: -1 })
@@ -44,10 +33,23 @@ export async function POST(req) {
     if (mistakes.length === 0) {
       return new NextResponse(
         JSON.stringify({
-          insight:
-            "No journal entries found to analyze. Log some mistakes first!",
+          error:
+            "Please connect your LeetCode account or add mistake logs to generate an AI report.",
         }),
-        { status: 200 },
+        { status: 400 },
+      );
+    }
+
+    // Check Quota (Cost: 5)
+    // Only deduct if we actually perform analysis
+    const quota = await checkAndDeductCredits(session.user.id, 5);
+    if (!quota.success) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Daily AI quota exceeded. Upgrade to Premium for more!",
+          credits: quota.credits,
+        }),
+        { status: 402 },
       );
     }
 
