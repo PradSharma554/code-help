@@ -61,7 +61,7 @@ export default function LoginContainer() {
           )}
 
           <div className="flex justify-between items-center mt-3 text-sm">
-            <Link 
+            <Link
               href="/forgot-password"
               className="text-slate-500 hover:text-indigo-600"
             >
@@ -71,7 +71,8 @@ export default function LoginContainer() {
               className="text-slate-500 hover:text-indigo-600"
               href={"/register"}
             >
-              Don't have an account? <span className="underline">Register</span>
+              Don&apos;t have an account?{" "}
+              <span className="underline">Register</span>
             </Link>
           </div>
         </form>

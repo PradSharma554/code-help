@@ -17,7 +17,7 @@ const Tooltip = ({
   // State to trigger recalculation
   const [recalculate, setRecalculate] = useState(false);
 
-  const calculatePosition = () => {
+  const calculatePosition = useCallback(() => {
     if (!tooltipRef.current || !triggerRef.current) {
       return;
     }
@@ -77,7 +77,7 @@ const Tooltip = ({
       zIndex: 50,
       arrowPosition: isAbove ? "bottom" : "top",
     });
-  };
+  }, [placement]);
 
   useEffect(() => {
     if (showTooltip) {
@@ -85,14 +85,14 @@ const Tooltip = ({
 
       setRecalculate(true);
     }
-  }, [showTooltip]);
+  }, [showTooltip, calculatePosition]);
 
   useEffect(() => {
     if (recalculate) {
       calculatePosition();
       setRecalculate(false); // Reset recalculate state
     }
-  }, [recalculate]);
+  }, [recalculate, calculatePosition]);
 
   // Cleanup timeout on component unmount
   useEffect(() => {

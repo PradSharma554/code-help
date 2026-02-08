@@ -141,7 +141,7 @@ export default function MistakeDetailModal({ isOpen, onClose, mistake }) {
               />
             ) : (
               <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-slate-700 leading-relaxed italic">
-                "{mistake.reflection}"
+                &quot;{mistake.reflection}&quot;
               </div>
             )}
           </div>

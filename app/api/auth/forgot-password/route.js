@@ -13,14 +13,19 @@ export async function POST(req) {
     console.log(`[ForgotPassword] Received request for: ${email}`);
 
     // Case-insensitive search
-    const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, "i") } });
-    
+    const user = await User.findOne({
+      email: { $regex: new RegExp(`^${email}$`, "i") },
+    });
+
     if (!user) {
       console.log(`[ForgotPassword] User not found for email: ${email}`);
       // Security: return 200 even if user not found to prevent enumeration
       return NextResponse.json(
-        { message: "If a user with that email exists, a password reset link has been sent." },
-        { status: 200 }
+        {
+          message:
+            "If a user with that email exists, a password reset link has been sent.",
+        },
+        { status: 200 },
       );
     }
     console.log(`[ForgotPassword] User found: ${user.email}`);
@@ -63,7 +68,7 @@ export async function POST(req) {
 
       return NextResponse.json(
         { message: "Email could not be sent" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {

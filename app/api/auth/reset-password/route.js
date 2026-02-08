@@ -23,14 +23,14 @@ export async function POST(req) {
     if (!user) {
       return NextResponse.json(
         { message: "Invalid or expired token" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Set new password
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
-    
+
     // Clear reset token fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
@@ -39,7 +39,7 @@ export async function POST(req) {
 
     return NextResponse.json(
       { message: "Password reset successful" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

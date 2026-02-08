@@ -77,7 +77,7 @@ export default function MistakeList({
       key: "reflection",
       render: (row) => (
         <div className="max-w-xs truncate text-slate-600 italic border-l-2 border-indigo-200 pl-2">
-          "{row.reflection}"
+          &quot;{row.reflection}&quot;
         </div>
       ),
     },

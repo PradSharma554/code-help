@@ -56,10 +56,10 @@ export const authOptions = {
         return token;
       }
 
-      // Handle existing sessions without expiry fields (migration) 
+      // Handle existing sessions without expiry fields (migration)
       if (!token.accessTokenExpires) {
-          token.accessTokenExpires = now + ACCESS_TOKEN_EXPIRY;
-          token.refreshTokenExpires = now + REFRESH_TOKEN_EXPIRY;
+        token.accessTokenExpires = now + ACCESS_TOKEN_EXPIRY;
+        token.refreshTokenExpires = now + REFRESH_TOKEN_EXPIRY;
       }
 
       // Check if refresh token is expired (Hard Stop)
@@ -83,7 +83,7 @@ export const authOptions = {
       if (token.error === "RefreshAccessTokenError") {
         return null; // Invalid session
       }
-      
+
       if (token) {
         session.user.id = token.id;
         session.accessTokenExpires = token.accessTokenExpires;

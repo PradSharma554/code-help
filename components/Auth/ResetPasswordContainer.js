@@ -92,7 +92,7 @@ export default function ResetPasswordContainer({ token }) {
             </div>
           )}
 
-           <div className="flex justify-end mt-3 text-sm">
+          <div className="flex justify-end mt-3 text-sm">
             <Link
               className="text-slate-500 hover:text-indigo-600"
               href={"/login"}
