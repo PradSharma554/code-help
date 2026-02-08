@@ -45,8 +45,8 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       const now = Date.now();
-      const ACCESS_TOKEN_EXPIRY = 60 * 1000; // 5 minutes
-      const REFRESH_TOKEN_EXPIRY = 60 * 1000; // 30 minutes of inactivity
+      const ACCESS_TOKEN_EXPIRY = 5 * 60 * 1000; // 5 minutes
+      const REFRESH_TOKEN_EXPIRY = 30 * 60 * 1000; // 30 minutes of inactivity
 
       // Initial sign in
       if (user) {
