@@ -43,15 +43,51 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      const now = Date.now();
+      const ACCESS_TOKEN_EXPIRY = 60 * 1000; // 5 minutes
+      const REFRESH_TOKEN_EXPIRY = 60 * 1000; // 30 minutes of inactivity
+
+      // Initial sign in
       if (user) {
         token.id = user.id;
+        token.accessTokenExpires = now + ACCESS_TOKEN_EXPIRY;
+        token.refreshTokenExpires = now + REFRESH_TOKEN_EXPIRY;
+        return token;
       }
+
+      // Handle existing sessions without expiry fields (migration) 
+      if (!token.accessTokenExpires) {
+          token.accessTokenExpires = now + ACCESS_TOKEN_EXPIRY;
+          token.refreshTokenExpires = now + REFRESH_TOKEN_EXPIRY;
+      }
+
+      // Check if refresh token is expired (Hard Stop)
+      if (now >= token.refreshTokenExpires) {
+        return { ...token, error: "RefreshAccessTokenError" };
+      }
+
+      // If here, refresh token is valid (user is active or within window)
+      // Slide the refresh token window (Inactivity reset)
+      token.refreshTokenExpires = now + REFRESH_TOKEN_EXPIRY;
+
+      // Check access token
+      if (now >= token.accessTokenExpires) {
+        // Access token expired, rotate it
+        token.accessTokenExpires = now + ACCESS_TOKEN_EXPIRY;
+      }
+
       return token;
     },
     async session({ session, token }) {
+      if (token.error === "RefreshAccessTokenError") {
+        return null; // Invalid session
+      }
+      
       if (token) {
         session.user.id = token.id;
+        session.accessTokenExpires = token.accessTokenExpires;
+        session.refreshTokenExpires = token.refreshTokenExpires;
       }
       return session;
     },

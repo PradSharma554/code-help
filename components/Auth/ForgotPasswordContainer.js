@@ -1,58 +1,71 @@
-import Link from "next/link";
-import { useState } from "react";
-import { useLogin } from "../../hooks/useAuth";
-import { useRouter } from "next/navigation";
+"use client";
 
-export default function LoginContainer() {
+import { useState } from "react";
+import Link from "next/link";
+
+export default function ForgotPasswordContainer() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const loginMutation = useLogin();
-  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setMessage("");
     setError("");
 
-    loginMutation.mutate(
-      { email, password },
-      {
-        onSuccess: () => {
-          router.replace("/");
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        onError: (err) => {
-          setError(err.message);
-        },
-      },
-    );
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
+      setMessage(data.message);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="shadow-lg p-8 bg-white rounded-xl w-full max-w-md border border-slate-100">
         <h1 className="text-2xl font-bold mb-6 text-slate-800">
-          Login to Insight
+          Forgot Password
         </h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             onChange={(e) => setEmail(e.target.value)}
             type="email"
-            placeholder="Email"
-            className="p-3 border rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
-          />
-          <input
-            onChange={(e) => setPassword(e.target.value)}
-            type="password"
-            placeholder="Password"
+            placeholder="Enter your email"
+            value={email}
+            required
             className="p-3 border rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
           />
           <button
-            disabled={loginMutation.isPending}
+            disabled={loading}
             className="bg-indigo-600 text-white font-bold cursor-pointer px-6 py-3 rounded-lg hover:bg-indigo-700 transition disabled:opacity-70"
           >
-            {loginMutation.isPending ? "Logging in..." : "Login"}
+            {loading ? "Sending..." : "Send Reset Link"}
           </button>
+
+          {message && (
+            <div className="bg-green-50 text-green-600 text-sm py-2 px-3 rounded-md mt-2">
+              {message}
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50 text-red-600 text-sm py-2 px-3 rounded-md mt-2">
@@ -60,18 +73,12 @@ export default function LoginContainer() {
             </div>
           )}
 
-          <div className="flex justify-between items-center mt-3 text-sm">
-            <Link 
-              href="/forgot-password"
-              className="text-slate-500 hover:text-indigo-600"
-            >
-              Forgot Password?
-            </Link>
+          <div className="flex justify-end mt-3 text-sm">
             <Link
               className="text-slate-500 hover:text-indigo-600"
-              href={"/register"}
+              href={"/login"}
             >
-              Don't have an account? <span className="underline">Register</span>
+              Back to <span className="underline">Login</span>
             </Link>
           </div>
         </form>
