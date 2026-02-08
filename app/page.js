@@ -29,8 +29,7 @@ function Landing() {
       </h1>
       <p className="max-w-2xl text-lg text-slate-600">
         Stop grinding blindly. Log your LeetCode mistakes, spot patterns, and
-        analyze complexity with AI-powered tools. Built for serious competitive
-        programmers.
+        analyze complexity with AI-powered tools.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl mt-12 py-8">
