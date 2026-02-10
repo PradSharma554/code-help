@@ -15,7 +15,7 @@ export default function Navbar() {
           className="flex items-center gap-2 font-bold text-xl text-indigo-600"
         >
           <Brain className="w-6 h-6" />
-          Algo Insight
+          Coding Lantern
         </Link>
 
         <div className="flex items-center gap-6">

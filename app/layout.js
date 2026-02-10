@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 export const metadata = {
-  title: "Algo Insight",
+  title: "Coding Lantern",
   description: "Log mistakes, analyze complexity, and master algorithms.",
 };
 
@@ -19,7 +19,7 @@ export default function RootLayout({ children }) {
               {children}
             </main>
             <footer className="py-6 text-center text-slate-500 text-sm">
-              Algo Insight © {new Date().getFullYear()}
+              Coding Lantern © {new Date().getFullYear()}
             </footer>
           </Providers>
         </NuqsAdapter>

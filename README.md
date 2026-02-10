@@ -1,11 +1,11 @@
-# Algo Insight 🧠
+# Coding Lantern 🧠
 
-Algo Insight is a specialized toolkit designed for comparative programmers and LeetCode enthusiasts. It helps users track their learning journey, identify mistake patterns, and understand code complexity through AI-driven analysis.
+Coding Lantern is a specialized toolkit designed for comparative programmers and LeetCode enthusiasts. It helps users track their learning journey, identify mistake patterns, and understand code complexity through AI-driven analysis.
 
 ## 🚀 Problem Solved
 
 Competitive programming often involves repetitive failure. Students grind hundreds of problems but often repeat the same specific types of mistakes (e.g., "Edge cases in DP", "TLE in Graph BFS").
-Algo Insight solves this by:
+Coding Lantern solves this by:
 
 1.  **Journaling Mistakes**: Moving beyond "Solved/Unsolved" to tracking _why_ you failed.
 2.  **Pattern Recognition**: Visualizing weak topics and recurring error types.
