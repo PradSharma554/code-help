@@ -1,6 +1,7 @@
 # Coding Lantern 🧠
 
-Coding Lantern is a specialized toolkit designed for comparative programmers and LeetCode enthusiasts. It helps users track their learning journey, identify mistake patterns, and understand code complexity through AI-driven analysis.
+Coding Lantern is a specialized toolkit designed for comparative programmers and LeetCode enthusiasts.
+It helps users track their learning journey, identify mistake patterns, and understand code complexity through AI-driven analysis.
 
 ## 🚀 Problem Solved
 
