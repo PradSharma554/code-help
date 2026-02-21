@@ -79,12 +79,12 @@ exports.getInsight = async (req, res) => {
         For suggestedProblems, provide exactly 2 specific LeetCode problems that directly address my weaknesses identified in the journal.
         `;
 
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-
       try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
         const cleanText = text
           .replace(/```json/g, "")
           .replace(/```/g, "")
@@ -92,9 +92,24 @@ exports.getInsight = async (req, res) => {
         const data = JSON.parse(cleanText);
         insight = data.insight;
         suggestedProblems = data.suggestedProblems;
-      } catch (e) {
-        console.error("JSON Parsing failed", e);
-        insight = text;
+      } catch (aiError) {
+        console.error("AI Generation Error", aiError);
+        insight =
+          "**Mock Insight (Gemini Quota Exceeded)**:\n\n1. **Weakness**: Dynamic Programming.\n2. **Reason**: Implementing bottom-up approaches.\n\n(Wait for API limits to reset)";
+        suggestedProblems = [
+          {
+            problemName: "Climbing Stairs",
+            difficulty: "Easy",
+            topic: "DP",
+            link: "https://leetcode.com/problems/climbing-stairs/",
+          },
+          {
+            problemName: "Coin Change",
+            difficulty: "Medium",
+            topic: "DP",
+            link: "https://leetcode.com/problems/coin-change/",
+          },
+        ];
       }
     }
 

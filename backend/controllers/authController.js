@@ -59,10 +59,28 @@ exports.register = async (req, res) => {
     await RegistrationLog.create({ ip, email });
 
     const verificationLink = `${process.env.FRONTEND_URL || "http://localhost:3000"}/verify?token=${verificationToken}`;
-    console.log("==========================================");
-    console.log(`[Mock Email] Verify Account for ${email}:`);
-    console.log(verificationLink);
-    console.log("==========================================");
+    const emailHtml = `
+      <h1>Account Verification</h1>
+      <p>Thank you for registering! Please click the link below to verify your email address:</p>
+      <a href="${verificationLink}" clicktracking=off>${verificationLink}</a>
+      <p>If you did not create an account, please ignore this email.</p>
+    `;
+
+    try {
+      await sendEmail({
+        to: email,
+        subject: "Verify your Account - Code Help",
+        html: emailHtml,
+      });
+      console.log(`[Email Sent] Verification link sent to ${email}`);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      // We still log it to the console as a fallback during development if email fails
+      console.log("==========================================");
+      console.log(`[Fallback Mock Email] Verify Account for ${email}:`);
+      console.log(verificationLink);
+      console.log("==========================================");
+    }
 
     res.status(201).json({
       message: "User created. Please verify your email (Check console).",

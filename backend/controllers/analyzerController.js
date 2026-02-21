@@ -159,16 +159,26 @@ exports.assist = async (req, res) => {
       `;
     }
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
 
-    const cleanText = text
-      .replace(/^```[a-z]*\s*/i, "")
-      .replace(/\s*```$/, "")
-      .trim();
+      const cleanText = text
+        .replace(/^```[a-z]*\s*/i, "")
+        .replace(/\s*```$/, "")
+        .trim();
 
-    res.status(200).json({ result: cleanText });
+      res.status(200).json({ result: cleanText });
+    } catch (aiError) {
+      console.error("AI Assistant Error (Quota Exceeded)", aiError);
+      return res.status(200).json({
+        result:
+          type === "hint"
+            ? "Use a hash map. (Mock Solution due to Quota Limits)"
+            : "Mock Solution: Use HashMap to store visited elements. (Actual AI Quota Exceeded)",
+      });
+    }
   } catch (error) {
     console.error("Analyzer Assist Error", error);
     res.status(500).json({ error: error.message });
