@@ -29,8 +29,9 @@ exports.analyzeCode = async (req, res) => {
 
     const quota = await checkAndDeductCredits(req.user._id, 1);
     if (!quota.success) {
-      return res.status(402).json({
-        error: "Daily AI quota exceeded.",
+      const statusCode = quota.message.includes("verify") ? 403 : 402;
+      return res.status(statusCode).json({
+        error: quota.message,
         credits: quota.credits,
       });
     }
@@ -100,8 +101,9 @@ exports.assist = async (req, res) => {
 
     const quota = await checkAndDeductCredits(req.user._id, 1);
     if (!quota.success) {
-      return res.status(402).json({
-        error: "Daily AI quota exceeded.",
+      const statusCode = quota.message.includes("verify") ? 403 : 402;
+      return res.status(statusCode).json({
+        error: quota.message,
         credits: quota.credits,
       });
     }

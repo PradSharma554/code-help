@@ -24,8 +24,9 @@ exports.getInsight = async (req, res) => {
 
     const quota = await checkAndDeductCredits(req.user._id, 5);
     if (!quota.success) {
-      return res.status(402).json({
-        error: "Daily AI quota exceeded. Upgrade to Premium for more!",
+      const statusCode = quota.message.includes("verify") ? 403 : 402;
+      return res.status(statusCode).json({
+        error: quota.message,
         credits: quota.credits,
       });
     }
