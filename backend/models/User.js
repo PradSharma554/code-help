@@ -70,4 +70,4 @@ if (mongoose.models.User) {
   delete mongoose.models.User;
 }
 
-module.exports = mongoose.models.*
+module.exports = mongoose.model("User", UserSchema);

@@ -19,5 +19,4 @@ const RegistrationLogSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.models.*
-  mongoose.model("RegistrationLog", RegistrationLogSchema);
+module.exports = mongoose.model("RegistrationLog", RegistrationLogSchema);

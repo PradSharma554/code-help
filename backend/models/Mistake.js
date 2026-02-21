@@ -50,5 +50,4 @@ const MistakeSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.models.*
-  mongoose.model("Mistake", MistakeSchema);
+module.exports = mongoose.model("Mistake", MistakeSchema);
