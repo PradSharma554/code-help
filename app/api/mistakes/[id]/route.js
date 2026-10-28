@@ -13,7 +13,7 @@ export async function PUT(req, { params }) {
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const { reflection } = await req.json();
 
     if (!reflection) {

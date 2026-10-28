@@ -13,7 +13,7 @@ Coding Lantern solves this by:
 
 ## 🏗 System Architecture
 
-- **Frontend**: Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons, Recharts.
+- **Frontend**: Next.js 16 (App Router), React, Tailwind CSS, Lucide Icons, Recharts.
 - **Backend**: Next.js API Routes (Serverless functions).
 - **Database**: MongoDB (via Mongoose) for storing User profiles and Mistake logs.
 - **Authentication**: NextAuth.js (JWT Strategy) with Credentials Provider.
